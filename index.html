@@ -21,22 +21,13 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- PDF.js para Visualização de Contratos -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    </script>
-
-    <!-- Firebase (Versão Compatibilidade) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         body { font-family: 'Nunito', sans-serif; background-color: #fdfdfd; user-select: none; }
         
+        /* Padrão de Casinhas no Fundo - Azul Profissional */
         .bg-pattern-houses {
             background-color: #ffffff;
             background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e0f2fe' fill-opacity='0.6'%3E%3Cpath d='M40 10 L55 25 L55 45 L25 45 L25 25 Z' /%3E%3Cpath d='M10 50 L20 60 L20 75 L0 75 L0 60 Z' opacity='0.5'/%3E%3Cpath d='M70 50 L80 60 L80 75 L60 75 L60 60 Z' opacity='0.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
@@ -45,7 +36,7 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f0f9ff; }
         ::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #1e3a8a; }
+        ::-webkit-scrollbar-thumb:hover { background: #0c4a6e; }
         
         .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -54,24 +45,20 @@
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
 
         /* Estilos de Impressão */
-        .print-area { font-family: 'Times New Roman', serif; line-height: 1.6; color: #000; }
-        .recibo-box { border: 2px dashed #000; padding: 40px; margin: 20px 0; background: #fff; width: 100%; box-sizing: border-box; }
+        .print-area { font-family: 'Times New Roman', serif; line-height: 1.6; }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; font-size: 12px; }
+        .print-table th, .print-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .print-table th { background-color: #f2f2f2; font-weight: bold; }
+        .contract-header { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 20px; text-transform: uppercase; }
+        .contract-body { text-align: justify; margin-bottom: 30px; font-size: 14px; }
+        .contract-clause { margin-bottom: 10px; }
+        .contract-clause strong { font-weight: bold; }
+        .recibo-box { border: 2px dashed #1e3a8a; padding: 30px; margin: 20px 0; background: #fff; border-radius: 10px; }
 
         @media print {
             body * { visibility: hidden; }
             #print-area-container, #print-area-container * { visibility: visible; }
-            #print-area-container { 
-                position: fixed; 
-                left: 0; 
-                top: 0; 
-                width: 100%; 
-                height: 100%; 
-                margin: 0; 
-                padding: 40px; 
-                background: white !important; 
-                z-index: 99999;
-                display: block !important;
-            }
+            #print-area-container { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 40px; }
             .no-print { display: none !important; }
         }
     </style>
@@ -80,23 +67,6 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- CONFIGURAÇÃO FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDW9gF4k0e2XuMbcgKouyIUmo3uaUxLheE",
-            authDomain: "gestaomaster-cc7a0.firebaseapp.com",
-            projectId: "gestaomaster-cc7a0",
-            storageBucket: "gestaomaster-cc7a0.firebasestorage.app",
-            messagingSenderId: "61242084578",
-            appId: "1:61242084578:web:e1f4fd6a1287bfd3b422bb"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
-        const db = firebase.firestore(); 
-        // ------------------------------------------------------------------
-
         const { useState, useEffect, useMemo, useRef } = React;
 
         // --- TOAST ---
@@ -107,7 +77,7 @@
                 <div className={`fixed top-4 right-4 ${bgClass} text-white px-6 py-4 rounded-2xl shadow-xl z-[60] flex items-center gap-3 animate-fade-in border-4 border-white`}>
                     <i className={type === 'error' ? "ph ph-warning-circle text-2xl" : "ph ph-check-circle text-2xl"}></i>
                     <span className="font-bold">{message}</span>
-                    <button onClick={onClose} className="opacity-75 hover:opacity-100 ml-4 transition-opacity"><i className="ph ph-x text-lg"></i></button>
+                    <button onClick={onClose} className="opacity-75 hover:opacity-100 ml-4"><i className="ph ph-x text-lg"></i></button>
                 </div>
             );
         };
@@ -154,7 +124,7 @@
             const [remember, setRemember] = useState(false);
             
             useEffect(() => {
-                const savedLogin = localStorage.getItem('gestaomaster_remember');
+                const savedLogin = localStorage.getItem('rentmaster_login_remember');
                 if (savedLogin) {
                     const { user: savedUser, pass: savedPass } = JSON.parse(savedLogin);
                     setUser(savedUser);
@@ -166,9 +136,9 @@
             const handleSubmit = (e) => {
                 e.preventDefault();
                 if (remember) {
-                    localStorage.setItem('gestaomaster_remember', JSON.stringify({ user, pass }));
+                    localStorage.setItem('rentmaster_login_remember', JSON.stringify({ user, pass }));
                 } else {
-                    localStorage.removeItem('gestaomaster_remember');
+                    localStorage.removeItem('rentmaster_login_remember');
                 }
                 onLogin(user, pass);
             };
@@ -188,7 +158,7 @@
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="relative">
                                 <span className="absolute left-3 top-3 text-blue-300"><Icon name="user" weight="bold"/></span>
-                                <input type="text" className="w-full p-3 pl-10 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all font-bold text-slate-600" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Utilizador" />
+                                <input type="text" className="w-full p-3 pl-10 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all font-bold text-slate-600" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Usuário" />
                             </div>
                             <div className="relative">
                                 <span className="absolute left-3 top-3 text-blue-300"><Icon name="lock" weight="bold"/></span>
@@ -212,24 +182,19 @@
         // --- APP PRINCIPAL ---
         function App() {
             const [appState, setAppState] = useState('login'); 
-            const [syncStatus, setSyncStatus] = useState('idle'); 
-            const [previewUrl, setPreviewUrl] = useState(null); 
             
-            const [pageNum, setPageNum] = useState(1);
-            const [pageCount, setPageCount] = useState(0);
-            const [pdfScale, setPdfScale] = useState(1.5);
-            const [pdfDoc, setPdfDoc] = useState(null);
-
+            // CONFIGURAÇÕES E CREDENCIAIS
             const [credentials, setCredentials] = useState(() => {
-                const saved = localStorage.getItem('gestaomaster_credentials');
+                const saved = localStorage.getItem('rentmaster_credentials');
                 return saved ? JSON.parse(saved) : { user: 'admin', pass: 'admin' };
             });
 
             const [userData, setUserData] = useState(() => {
-                const saved = localStorage.getItem('gestaomaster_userdata');
-                return saved ? JSON.parse(saved) : { name: 'Proprietário Master', email: 'contato@gestaomaster.pt', phone: '', document: '' };
+                const saved = localStorage.getItem('rentmaster_userdata');
+                return saved ? JSON.parse(saved) : { name: 'Proprietário Master', email: 'contato@gestaomaster.com', phone: '', document: '' };
             });
 
+            // ESTADOS DE DADOS
             const [properties, setProperties] = useState([]);
             const [tenants, setTenants] = useState([]);
             const [contracts, setContracts] = useState([]);
@@ -237,415 +202,151 @@
             
             const [loading, setLoading] = useState(true);
 
+            // UI
             const [activeTab, setActiveTab] = useState('dashboard');
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [modalType, setModalType] = useState('');
             const [editingItem, setEditingItem] = useState(null);
             
-            const [propertyForm, setPropertyForm] = useState({ 
-                nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', 
-                description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', 
-                legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false 
-            });
-            const [tenantForm, setTenantForm] = useState({ name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false, propertyId: '' });
-            const [contractForm, setContractForm] = useState({ propertyId: '', tenantId: '', start_date: '', end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '', fileData: '' });
-            const [financeForm, setFinanceForm] = useState({ type: 'Receita', category: 'Aluguer', description: '', value: '', date: '', status: 'Pendente', propertyId: '' });
+            // FORMS
+            const [propertyForm, setPropertyForm] = useState({ nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false });
+            const [tenantForm, setTenantForm] = useState({ name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false });
+            const [contractForm, setContractForm] = useState({ propertyId: '', tenantId: '', start_date: '', end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '' });
+            const [financeForm, setFinanceForm] = useState({ type: 'Receita', category: 'Aluguel', description: '', value: '', date: '', status: 'Pendente', propertyId: '' });
             const [configPasswordForm, setConfigPasswordForm] = useState({ current: '', newPass: '', confirm: '' });
 
             const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
             const showToast = (msg, type = 'info') => { setToast({ show: true, message: msg, type }); setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3000); };
 
-            // Função para converter Base64 em Blob
-            const dataURItoBlob = (dataURI) => {
-                try {
-                    const byteString = atob(dataURI.split(',')[1]);
-                    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-                    const ab = new ArrayBuffer(byteString.length);
-                    const ia = new Uint8Array(ab);
-                    for (let i = 0; i < byteString.length; i++) {
-                        ia[i] = byteString.charCodeAt(i);
-                    }
-                    return new Blob([ab], {type: mimeString});
-                } catch (e) {
-                    console.error("Erro ao converter arquivo", e);
-                    return null;
-                }
-            };
-
-            // CARREGAR DADOS DO FIRESTORE
+            // CARREGAR DADOS
             useEffect(() => {
                 if (appState === 'authenticated') {
-                    setLoading(true);
-                    setSyncStatus('syncing');
-
-                    const loadCollection = async (collectionName, setter) => {
-                        try {
-                            const snapshot = await db.collection(collectionName).get();
-                            const data = snapshot.docs.map(doc => {
-                                const rawData = doc.data();
-                                return { id: doc.id, ...rawData };
-                            });
-                            setter(data);
-                        } catch (error) {
-                            console.error(`Erro ao carregar ${collectionName}:`, error);
-                            showToast(`Erro na nuvem: ${collectionName}`, 'error');
-                            setSyncStatus('error');
-                        }
+                    const load = (key, setFn, mock) => {
+                        const data = localStorage.getItem(`rentmaster_${key}`);
+                        if (data) setFn(JSON.parse(data));
+                        else setFn(mock);
                     };
 
-                    Promise.all([
-                        loadCollection('properties', setProperties),
-                        loadCollection('tenants', setTenants),
-                        loadCollection('contracts', setContracts),
-                        loadCollection('financial', setFinancial)
-                    ]).then(() => {
-                        setLoading(false);
-                        setSyncStatus('success');
-                        setTimeout(() => setSyncStatus('idle'), 3000);
-                    }).catch(err => {
-                        console.error("Erro geral na sincronização", err);
-                        setLoading(false);
-                        setSyncStatus('error');
-                    });
+                    load('properties', setProperties, [
+                        { id: 1, nickname: 'Casa da Esquina', address: 'Rua das Flores, 123', type: 'Casa', iptu_id: '123.456.789', status: 'Alugado', base_rent: 2500, description: '3 Quartos, 1 Suíte', legal_status: 'Regular', doc_registration: true, doc_deed: true, doc_iptu: true },
+                        { id: 2, nickname: 'Apto Centro', address: 'Av. Paulista, 900', type: 'Apartamento', iptu_id: '987.654.321', status: 'Vago', base_rent: 3200, description: 'Mobiliado', legal_status: 'Espólio', legal_notes: 'Inventário em andamento na 2ª Vara Cível', doc_registration: false, doc_deed: true, doc_iptu: false }
+                    ]);
+                    load('tenants', setTenants, [
+                        { id: 1, name: 'João Silva', cpf: '123.456.789-00', phone: '11999999999', email: 'joao@email.com', status: 'Ativo', documents_checked: true }
+                    ]);
+                    load('contracts', setContracts, [
+                        { id: 1, propertyId: 1, tenantId: 1, start_date: '2023-01-10', end_date: '2025-01-10', rent_value: 2500, deposit_value: 7500, payment_day: '10', status: 'Ativo', index_adjustment: 'IPCA', fileName: 'contrato_assinado.pdf' }
+                    ]);
+                    load('financial', setFinancial, [
+                        { id: 1, type: 'Receita', category: 'Aluguel', description: 'Aluguel Casa Esquina - Dez', value: 2500, date: '2023-12-10', status: 'Pago', propertyId: 1 }
+                    ]);
+
+                    setLoading(false);
                 }
             }, [appState]);
 
+            // SALVAR DADOS
             useEffect(() => {
                 if (!loading && appState === 'authenticated') {
-                    localStorage.setItem('gestaomaster_userdata', JSON.stringify(userData));
-                    localStorage.setItem('gestaomaster_credentials', JSON.stringify(credentials));
+                    localStorage.setItem('rentmaster_properties', JSON.stringify(properties));
+                    localStorage.setItem('rentmaster_tenants', JSON.stringify(tenants));
+                    localStorage.setItem('rentmaster_contracts', JSON.stringify(contracts));
+                    localStorage.setItem('rentmaster_financial', JSON.stringify(financial));
+                    localStorage.setItem('rentmaster_userdata', JSON.stringify(userData));
+                    localStorage.setItem('rentmaster_credentials', JSON.stringify(credentials));
                 }
-            }, [userData, credentials, loading, appState]);
+            }, [properties, tenants, contracts, financial, userData, credentials, loading, appState]);
 
             const handleLogin = (u, p) => {
                 if (u === credentials.user && p === credentials.pass) setAppState('authenticated');
-                else showToast('Dados de acesso incorretos', 'error');
+                else showToast('Credenciais inválidas', 'error');
             };
 
             const handleSaveConfig = (e) => {
                 e.preventDefault();
-                showToast('Perfil master atualizado!', 'success');
+                showToast('Dados cadastrais atualizados!', 'success');
             };
 
             const handleChangePassword = (e) => {
                 e.preventDefault();
+                if (configPasswordForm.current !== credentials.pass) {
+                    showToast('Senha atual incorreta.', 'error');
+                    return;
+                }
+                if (configPasswordForm.newPass !== configPasswordForm.confirm) {
+                    showToast('As novas senhas não conferem.', 'error');
+                    return;
+                }
+                if (configPasswordForm.newPass.length < 4) {
+                    showToast('A senha deve ter pelo menos 4 caracteres.', 'error');
+                    return;
+                }
                 setCredentials({ ...credentials, pass: configPasswordForm.newPass });
                 setConfigPasswordForm({ current: '', newPass: '', confirm: '' });
-                showToast('Senha master atualizada!', 'success');
+                showToast('Senha alterada com sucesso!', 'success');
             };
 
-            const saveToCloud = async (collectionName, itemData, setter, currentList, isEdit) => {
-                setSyncStatus('syncing');
-                const docId = String(itemData.id);
-                try {
-                    await db.collection(collectionName).doc(docId).set(itemData);
-                    setter(isEdit ? currentList.map(i => String(i.id) === docId ? itemData : i) : [...currentList, itemData]);
-                    setSyncStatus('success');
-                    showToast('Salvo na Nuvem com Sucesso!', 'success');
-                    setIsModalOpen(false);
-                } catch (error) {
-                    console.error("Erro ao salvar na nuvem:", error);
-                    showToast('Erro ao salvar na nuvem.', 'error');
-                    setSyncStatus('error');
+            const deleteItem = (id, list, setList) => {
+                if(confirm('Tem certeza que deseja excluir?')) {
+                    setList(list.filter(i => i.id !== id));
+                    showToast('Registro removido.', 'success');
                 }
-            };
-
-            const deleteFromCloud = async (collectionName, id, setter, currentList) => {
-                if(!confirm('Confirmar eliminação permanente da Nuvem?')) return;
-                setSyncStatus('syncing');
-                const docId = String(id);
-                try {
-                    await db.collection(collectionName).doc(docId).delete();
-                    setter(currentList.filter(i => String(i.id) !== docId));
-                    setSyncStatus('success');
-                    showToast('Removido da Nuvem.', 'success');
-                } catch (error) {
-                    console.error("Erro ao deletar:", error);
-                    showToast('Erro ao deletar na nuvem.', 'error');
-                    setSyncStatus('error');
-                }
-            };
-
-            const deleteItem = (id, list, setList, collectionName) => {
-                deleteFromCloud(collectionName, id, setList, list);
-            };
-
-            // RENDERIZAÇÃO DO PDF
-            const renderPage = async (pdf, num, scale) => {
-                try {
-                    const page = await pdf.getPage(num);
-                    const viewport = page.getViewport({ scale });
-                    const canvas = document.getElementById('pdf-canvas');
-                    if (!canvas) return;
-                    
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-                    await page.render(renderContext).promise;
-                } catch (err) {
-                    console.error("Erro ao renderizar página", err);
-                }
-            };
-
-            useEffect(() => {
-                if (modalType === 'contract_view' && editingItem?.fileData && editingItem.fileData.includes('pdf')) {
-                    const loadingTask = pdfjsLib.getDocument(editingItem.fileData);
-                    loadingTask.promise.then(pdf => {
-                        setPdfDoc(pdf);
-                        setPageCount(pdf.numPages);
-                    }, reason => {
-                        console.error("Erro ao carregar PDF:", reason);
-                        showToast("Erro ao carregar documento PDF.", "error");
-                    });
-                }
-            }, [modalType, editingItem]);
-
-            useEffect(() => {
-                if (pdfDoc) {
-                    renderPage(pdfDoc, pageNum, pdfScale);
-                }
-            }, [pdfDoc, pageNum, pdfScale]);
-
-            const changePage = (offset) => {
-                const newPage = pageNum + offset;
-                if (newPage >= 1 && newPage <= pageCount) {
-                    setPageNum(newPage);
-                }
-            };
-
-            const changeZoom = (delta) => {
-                setPdfScale(prev => Math.max(0.5, prev + delta));
             };
 
             const openModal = (type, item = null) => {
                 setModalType(type);
                 setEditingItem(item);
                 const today = new Date().toISOString().split('T')[0];
-                setPageNum(1); 
-                setPdfScale(1.5); 
-
-                if (type === 'contract_view' && item && item.fileData) {
-                    if (!item.fileData.includes('pdf')) {
-                        setPreviewUrl(item.fileData);
-                    }
-                }
 
                 if (type === 'property') setPropertyForm(item || { nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false });
-                else if (type === 'tenant') setTenantForm(item || { name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false, propertyId: '' });
-                else if (type === 'contract') setContractForm(item || { propertyId: '', tenantId: '', start_date: today, end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '', fileData: '' });
-                else if (type === 'finance') setFinanceForm(item || { type: 'Receita', category: 'Aluguer', description: '', value: '', date: today, status: 'Pendente', propertyId: '' });
+                else if (type === 'tenant') setTenantForm(item || { name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false });
+                else if (type === 'contract') setContractForm(item || { propertyId: '', tenantId: '', start_date: today, end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '' });
+                else if (type === 'finance') setFinanceForm(item || { type: 'Receita', category: 'Aluguel', description: '', value: '', date: today, status: 'Pendente', propertyId: '' });
                 
                 setIsModalOpen(true);
-            };
-
-            const closeModal = () => {
-                setIsModalOpen(false);
-                setPreviewUrl(null);
-                setPdfDoc(null);
-            };
-
-            const handleFileUpload = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                if (file.type !== "application/pdf") {
-                    alert("Formato inválido. Por favor, envie apenas arquivos PDF.");
-                    e.target.value = ""; 
-                    return;
-                }
-
-                if (file.size > 800 * 1024) { 
-                    alert("O arquivo é muito grande para o modo demonstração (Máx 800KB).");
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setContractForm({ ...contractForm, fileName: file.name, fileData: reader.result });
-                };
-                reader.readAsDataURL(file);
-            };
-
-            const downloadContract = (contract) => {
-                if (contract.fileData) {
-                    const link = document.createElement("a");
-                    link.href = contract.fileData;
-                    link.download = contract.fileName || "contrato.pdf";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showToast("Download iniciado!", "success");
-                } else {
-                    showToast("Nenhum arquivo digitalizado encontrado.", "error");
-                }
-            };
-
-            // Função de Impressão Robusta
-            const handlePrintReceipt = (item) => {
-                const iframe = document.createElement('iframe');
-                iframe.style.position = 'fixed';
-                iframe.style.right = '0';
-                iframe.style.bottom = '0';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.style.border = '0';
-                document.body.appendChild(iframe);
-
-                const doc = iframe.contentWindow.document;
-                
-                const content = `
-                    <html>
-                    <head>
-                        <title>Recibo - Gestão Master</title>
-                        <style>
-                            body { font-family: 'Times New Roman', serif; padding: 40px; color: #000; }
-                            .recibo-box { border: 2px dashed #000; padding: 40px; width: 100%; box-sizing: border-box; }
-                            .header { text-align: center; margin-bottom: 40px; }
-                            .title { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; }
-                            .subtitle { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #555; margin-top: 5px; }
-                            .content { font-size: 18px; line-height: 1.6; }
-                            .value { background: #f3f4f6; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
-                            .description { text-transform: uppercase; font-weight: bold; }
-                            .footer { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #000; padding-top: 30px; }
-                            .signature { text-align: right; }
-                            .line { margin-bottom: 5px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="recibo-box">
-                            <div class="header">
-                                <h1 class="title">Recibo de Pagamento</h1>
-                                <p class="subtitle">Gestão Master Imobiliária</p>
-                            </div>
-                            
-                            <div class="content">
-                                <p>Recebemos a quantia de <span class="value">${formatCurrency(item.value)}</span></p>
-                                <p><strong>Referente a:</strong> <span class="description">${item.description}</span></p>
-                                <br>
-                                <p>Declaramos para os devidos fins que o valor acima foi liquidado.</p>
-                            </div>
-
-                            <div class="footer">
-                                <div>
-                                    <p><strong>Data de Emissão:</strong></p>
-                                    <p>${new Date().toLocaleDateString('pt-BR')}</p>
-                                </div>
-                                <div class="signature">
-                                    <p class="line">__________________________________________</p>
-                                    <p><strong>ASSINATURA DO RESPONSÁVEL</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                        <script>
-                            window.onload = function() { window.print(); }
-                        <\/script>
-                    </body>
-                    </html>
-                `;
-
-                doc.open();
-                doc.write(content);
-                doc.close();
-
-                setTimeout(() => {
-                    document.body.removeChild(iframe);
-                }, 1000);
             };
 
             const saveItem = (e) => {
                 e.preventDefault();
                 const id = editingItem ? editingItem.id : Date.now();
-                const isEdit = !!editingItem;
 
                 if (modalType === 'property') {
                     const newItem = { ...propertyForm, id, base_rent: parseFloat(propertyForm.base_rent) };
-                    saveToCloud('properties', newItem, setProperties, properties, isEdit);
+                    setProperties(editingItem ? properties.map(i => i.id === id ? newItem : i) : [...properties, newItem]);
                 } else if (modalType === 'tenant') {
                     const newItem = { ...tenantForm, id };
-                    saveToCloud('tenants', newItem, setTenants, tenants, isEdit);
+                    setTenants(editingItem ? tenants.map(i => i.id === id ? newItem : i) : [...tenants, newItem]);
                 } else if (modalType === 'contract') {
                     const newItem = { ...contractForm, id, rent_value: parseFloat(contractForm.rent_value), deposit_value: parseFloat(contractForm.deposit_value), propertyId: parseInt(contractForm.propertyId), tenantId: parseInt(contractForm.tenantId) };
-                    saveToCloud('contracts', newItem, setContracts, contracts, isEdit);
-                    
-                    if (newItem.status === 'Ativo' && newItem.propertyId) {
-                        const propToUpdate = properties.find(p => p.id === newItem.propertyId);
-                        if (propToUpdate && propToUpdate.status !== 'Alugado') {
-                            const updatedProp = { ...propToUpdate, status: 'Alugado' };
-                            db.collection('properties').doc(String(updatedProp.id)).set(updatedProp)
-                                .then(() => {
-                                    setProperties(prevProps => prevProps.map(p => p.id === updatedProp.id ? updatedProp : p));
-                                    showToast('Status do imóvel atualizado para Alugado!', 'info');
-                                });
-                        }
+                    setContracts(editingItem ? contracts.map(i => i.id === id ? newItem : i) : [...contracts, newItem]);
+                    if (newItem.status === 'Ativo') {
+                        setProperties(properties.map(p => p.id === newItem.propertyId ? { ...p, status: 'Alugado' } : p));
                     }
-
                 } else if (modalType === 'finance') {
                     const newItem = { ...financeForm, id, value: parseFloat(financeForm.value), propertyId: parseInt(financeForm.propertyId) };
-                    saveToCloud('financial', newItem, setFinancial, financial, isEdit);
+                    setFinancial(editingItem ? financial.map(i => i.id === id ? newItem : i) : [...financial, newItem]);
                 }
+
+                setIsModalOpen(false);
+                showToast('Salvo com sucesso!', 'success');
             };
 
-            const generateReportDOC = (type) => {
-                let title = "";
-                let tableHeader = "";
-                let tableRows = "";
-
-                if (type === 'report_finance') {
-                    title = "Fluxo Financeiro";
-                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Valor</th><th>Status</th></tr>`;
-                    tableRows = financial.map(f => `<tr><td>${new Date(f.date).toLocaleDateString()}</td><td>${f.type}</td><td>${f.category}</td><td>${f.description}</td><td>${formatCurrency(f.value)}</td><td>${f.status}</td></tr>`).join('');
-                } else if (type === 'report_occupancy') {
-                    title = "Relatório de Ocupação";
-                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Imóvel</th><th>Endereço</th><th>Status</th><th>Valor Base</th></tr>`;
-                    tableRows = properties.map(p => `<tr><td>${p.nickname}</td><td>${p.address}</td><td>${p.status}</td><td>${formatCurrency(p.base_rent)}</td></tr>`).join('');
-                } else if (type === 'report_tenants') {
-                    title = "Relatório de Inquilinos";
-                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Nome</th><th>CPF</th><th>Email</th><th>Telefone</th><th>Status</th></tr>`;
-                    tableRows = tenants.map(t => `<tr><td>${t.name}</td><td>${t.cpf}</td><td>${t.email}</td><td>${t.phone}</td><td>${t.status}</td></tr>`).join('');
+            const generateReportCSV = (type) => {
+                let content = "Data,Imovel,Descricao,Categoria,Valor,Status\n";
+                if (type === 'finance') {
+                    financial.forEach(f => {
+                        const prop = properties.find(p => p.id === f.propertyId);
+                        content += `${f.date},${prop?.nickname || 'Geral'},${f.description},${f.category},${f.value},${f.status}\n`;
+                    });
                 }
-
-                const content = `
-                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                    <head>
-                        <meta charset='utf-8'>
-                        <title>${title}</title>
-                        <style>
-                            body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; }
-                            h1 { color: #1e3a8a; text-align: center; font-size: 18pt; margin-bottom: 20px; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-                            th { font-weight: bold; background-color: #f3f4f6; }
-                            .footer { margin-top: 30px; font-size: 9pt; color: #666; text-align: right; border-top: 1px solid #ccc; padding-top: 10px; }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>GESTÃO MASTER - ${title}</h1>
-                        <p><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}</p>
-                        <br>
-                        <table>
-                            <thead>${tableHeader}</thead>
-                            <tbody>${tableRows}</tbody>
-                        </table>
-                        <div class="footer">Documento gerado automaticamente pelo sistema Gestão Master.</div>
-                    </body>
-                    </html>
-                `;
-
-                const blob = new Blob([content], { type: 'application/msword' });
+                const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
-                link.download = `Relatorio_Master_${type}.doc`;
-                document.body.appendChild(link);
+                link.download = `Relatorio_${type}.csv`;
                 link.click();
-                document.body.removeChild(link);
-                showToast('Relatório DOC gerado com sucesso!', 'success');
+                showToast('Relatório exportado!', 'success');
             };
 
             const stats = useMemo(() => {
@@ -662,12 +363,12 @@
 
             const menuItems = [
                 { id: 'dashboard', label: 'Visão Geral', icon: 'chart-pie-slice' },
+                { id: 'situation', label: 'Situação Legal', icon: 'gavel' },
                 { id: 'properties', label: 'Meus Imóveis', icon: 'house' },
                 { id: 'tenants', label: 'Inquilinos', icon: 'users' },
                 { id: 'contracts', label: 'Contratos', icon: 'file-text' },
                 { id: 'finance', label: 'Financeiro', icon: 'currency-dollar' },
                 { id: 'reports', label: 'Relatórios', icon: 'scroll' }, 
-                { id: 'situation', label: 'Situação Legal', icon: 'gavel' },
                 { id: 'config', label: 'Configurações', icon: 'gear' }, 
             ];
 
@@ -676,7 +377,7 @@
                     <Toast {...toast} onClose={() => setToast({...toast, show: false})} />
                     
                     <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-900 text-white flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl`}>
-                        <div className="p-6 border-b border-blue-800/30 text-left">
+                        <div className="p-6 border-b border-blue-800/30">
                             <BrandLogo />
                         </div>
                         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
@@ -711,21 +412,6 @@
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                {/* INDICADOR DE NUVEM */}
-                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    syncStatus === 'syncing' ? 'bg-yellow-100 text-yellow-700' : 
-                                    (syncStatus === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700')
-                                }`}>
-                                    {syncStatus === 'syncing' && <Icon name="spinner" className="animate-spin" weight="bold"/>}
-                                    {syncStatus === 'success' && <Icon name="cloud-check" weight="fill"/>}
-                                    {syncStatus === 'error' && <Icon name="cloud-slash" weight="fill"/>}
-                                    {syncStatus === 'idle' && <Icon name="cloud" weight="bold"/>}
-                                    <span className="hidden md:inline">
-                                        {syncStatus === 'syncing' ? 'Sincronizando...' : 
-                                        (syncStatus === 'error' ? 'Erro Nuvem' : 'Nuvem OK')}
-                                    </span>
-                                </div>
-
                                 <span className="text-xs text-slate-500 font-bold hidden md:block">Bem-vindo, {userData.name.split(' ')[0]}</span>
                                 <button onClick={() => setAppState('login')} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:text-red-500 transition-colors shadow-sm border"><Icon name="sign-out" size={20} weight="bold"/></button>
                             </div>
@@ -755,12 +441,13 @@
                                             </div>
                                         </Card>
                                         <Card className="p-6 bg-white border-2 border-slate-100 card-hover text-left">
-                                            <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Situação Crítica</p>
+                                            <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1 text-left">Situação Crítica</p>
                                             <h3 className="text-3xl font-extrabold text-red-500 text-left">{stats.riskLegal}</h3>
                                         </Card>
                                     </div>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
+                                        {/* Rendimento Total */}
                                         <Card className="p-8 card-hover bg-white border-2 border-blue-50 text-left">
                                             <h3 className="font-bold text-xl text-slate-800 mb-6 flex items-center gap-3 uppercase tracking-tighter"><div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><Icon name="money" weight="fill"/></div> Rendimento Total do Último Mês</h3>
                                             <div className="space-y-6">
@@ -768,9 +455,9 @@
                                                     <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
                                                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 text-center">Receita Líquida Consolidada</p>
                                                     <h2 className="text-6xl font-black text-emerald-600 tracking-tighter text-center">{formatCurrency(stats.balance)}</h2>
-                                                    <p className="text-[11px] text-slate-400 mt-4 font-extrabold uppercase tracking-widest bg-white px-4 py-1 rounded-full border shadow-sm text-center">Mês de Referência: Atual</p>
+                                                    <p className="text-[11px] text-slate-400 mt-4 font-extrabold uppercase tracking-widest bg-white px-4 py-1 rounded-full border shadow-sm text-center">Referência: Atual</p>
                                                 </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-2 gap-4">
                                                     <div className="p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
                                                         <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1 opacity-70">Entradas</p>
                                                         <p className="text-2xl font-black text-emerald-800">{formatCurrency(stats.totalIncome)}</p>
@@ -786,12 +473,12 @@
                                         <Card className="p-8 card-hover overflow-y-auto max-h-[500px] text-left">
                                             <h3 className="font-bold text-xl text-slate-800 mb-6 flex items-center gap-3 uppercase tracking-tighter text-left"><div className="p-2 bg-blue-100 text-blue-900 rounded-lg"><Icon name="bell-ringing" weight="fill"/></div> Alertas do Sistema</h3>
                                             
-                                            {/* Alerta Jurídico Clicável */}
+                                            {/* Alertas Jurídicos Clicável */}
                                             {properties.filter(p => ['Judicial', 'Penhora', 'Dívida Ativa'].includes(p.legal_status)).map(p => (
                                                 <div key={`alert-leg-${p.id}`} onClick={() => setActiveTab('situation')} className="mb-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-red-100 transition-all border-l-8 border-l-red-500 group">
                                                     <div className="text-left">
                                                         <p className="text-sm font-extrabold text-red-800">Risco Jurídico: {p.nickname}</p>
-                                                        <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-1 group-hover:underline">Gerir Auditoria</p>
+                                                        <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-1 group-hover:underline">Clique para gerir processo</p>
                                                     </div>
                                                     <Icon name="warning" className="text-red-500 group-hover:scale-110 transition-transform" size={24} weight="bold"/>
                                                 </div>
@@ -802,11 +489,22 @@
                                                 <div key={`alert-fin-${f.id}`} onClick={() => setActiveTab('finance')} className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-100 transition-all border-l-8 border-l-blue-400 group">
                                                     <div className="text-left">
                                                         <p className="text-sm font-extrabold text-slate-800">{f.description}</p>
-                                                        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest group-hover:underline">Resolver na Tesouraria</p>
+                                                        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest group-hover:underline">Ir para Tesouraria</p>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-sm text-blue-600 font-black">{formatCurrency(f.value)}</p>
                                                     </div>
+                                                </div>
+                                            ))}
+                                            
+                                            {/* Alerta de Documentação */}
+                                            {tenants.filter(t => !t.documents_checked).map(t => (
+                                                <div key={`alert-doc-${t.id}`} onClick={() => setActiveTab('tenants')} className="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-orange-100 transition-all border-l-8 border-l-orange-400 group">
+                                                    <div className="text-left">
+                                                        <p className="text-sm font-extrabold text-slate-800">Doc. Pendente: {t.name}</p>
+                                                        <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest group-hover:underline">Regularizar</p>
+                                                    </div>
+                                                    <Icon name="file-search" className="text-orange-500 group-hover:scale-110 transition-transform" size={24} weight="bold"/>
                                                 </div>
                                             ))}
                                         </Card>
@@ -831,13 +529,13 @@
                                             <Icon name="warning-diamond" size={40} className="text-red-500" weight="fill"/>
                                         </Card>
                                         <Card className="p-6 border-l-8 border-l-blue-900 flex items-center justify-between">
-                                            <div className="text-left"><p className="text-[10px] font-black uppercase text-slate-400">Total Ativos</p><h4 className="text-3xl font-black text-slate-800">{stats.totalProperties}</h4></div>
+                                            <div className="text-left"><p className="text-[10px] font-black uppercase text-slate-400">Total Carteira</p><h4 className="text-3xl font-black text-slate-800">{stats.totalProperties}</h4></div>
                                             <Icon name="buildings" size={40} className="text-blue-900" weight="fill"/>
                                         </Card>
                                     </div>
 
                                     <div className="space-y-12">
-                                        {['Regular', 'Espólio', 'Inventário em Trâmite', 'Nome de Parente', 'Usucapião', 'Contrato de Gaveta', 'Judicial', 'Penhora'].map(status => {
+                                        {['Regular', 'Espólio', 'Inventário em Trâmite', 'Nome de Parente', 'Usucapião', 'Financiado', 'Contrato de Gaveta', 'Judicial', 'Pendente Habite-se', 'Dívida Ativa / Penhora'].map(status => {
                                             const props = properties.filter(p => (p.legal_status || 'Regular') === status);
                                             if (props.length === 0) return null;
                                             return (
@@ -846,18 +544,18 @@
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                         {props.map(p => (
                                                             <Card key={p.id} className="p-8 card-hover border-2 border-slate-100 text-left">
-                                                                <div className="flex justify-between items-start text-left mb-4">
+                                                                <div className="flex justify-between items-start text-left">
                                                                     <h4 className="font-black text-xl text-slate-800 mb-1">{p.nickname}</h4>
-                                                                    {/* Botões de edição/exclusão removidos para ser apenas informativo */}
+                                                                    <Icon name="pencil-simple" className="text-slate-300 hover:text-blue-900 cursor-pointer" weight="bold" onClick={() => openModal('property', p)}/>
                                                                 </div>
                                                                 <p className="text-xs font-bold text-slate-400 mb-4">{p.address}</p>
                                                                 <div className="space-y-2 mb-6 bg-slate-50 p-4 rounded-2xl border text-xs font-black uppercase tracking-widest text-left">
                                                                     <div className="flex justify-between text-left"><span>Matrícula</span>{p.doc_registration ? <Icon name="check-circle" className="text-emerald-500" weight="fill"/> : <Icon name="x-circle" className="text-red-400" weight="fill"/>}</div>
                                                                     <div className="flex justify-between text-left"><span>Escritura</span>{p.doc_deed ? <Icon name="check-circle" className="text-emerald-500" weight="fill"/> : <Icon name="x-circle" className="text-red-400" weight="fill"/>}</div>
-                                                                    <div className="flex justify-between text-left"><span>IPTU Pago</span>{p.doc_iptu ? <Icon name="check-circle" className="text-emerald-500" weight="fill"/> : <Icon name="x-circle" className="text-red-400" weight="fill"/>}</div>
+                                                                    <div className="flex justify-between text-left"><span>IPTU em dia</span>{p.doc_iptu ? <Icon name="check-circle" className="text-emerald-500" weight="fill"/> : <Icon name="x-circle" className="text-red-400" weight="fill"/>}</div>
                                                                 </div>
                                                                 {p.legal_notes && <div className="bg-blue-50 p-3 rounded-xl text-xs text-blue-900 italic border mb-4 text-left">"{p.legal_notes}"</div>}
-                                                                <div className="w-full py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest text-center">Apenas Consulta</div>
+                                                                <button onClick={() => openModal('property', p)} className="w-full py-3 bg-blue-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Audit Jurídica</button>
                                                             </Card>
                                                         ))}
                                                     </div>
@@ -872,92 +570,52 @@
                             {activeTab === 'properties' && (
                                 <div className="space-y-8 animate-fade-in text-left">
                                     <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-left">
-                                        <h2 className="text-xl font-extrabold text-slate-800">Meus Ativos</h2>
+                                        <h2 className="text-xl font-extrabold text-slate-800">Inventário Master</h2>
                                         <button onClick={() => openModal('property')} className="bg-blue-900 text-white px-6 py-3 rounded-xl text-sm font-extrabold flex items-center gap-2 shadow-lg"><Icon name="plus" weight="bold"/> NOVO IMÓVEL</button>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-                                        {properties.map(p => {
-                                            // Lógica para encontrar o inquilino atual
-                                            const activeContract = contracts.find(c => c.propertyId == p.id && c.status === 'Ativo');
-                                            const currentTenant = activeContract ? tenants.find(t => t.id == activeContract.tenantId) : null;
-
-                                            return (
-                                                <Card key={p.id} className="overflow-hidden group card-hover border-none shadow-md text-left flex flex-col justify-between">
-                                                    <div>
-                                                        <div className={`h-3 w-full ${p.status === 'Alugado' ? 'bg-blue-900' : (p.status === 'Vago' ? 'bg-red-500' : 'bg-yellow-500')}`}></div>
-                                                        <div className="p-6 pb-0 text-left">
-                                                            <div className="flex justify-between items-start mb-2">
-                                                                <h3 className="font-extrabold text-xl text-slate-800 text-left">{p.nickname}</h3>
-                                                                <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${p.status === 'Alugado' ? 'bg-blue-100 text-blue-900' : (p.status === 'Vago' ? 'bg-red-100 text-red-900' : 'bg-yellow-100 text-yellow-900')}`}>
-                                                                    {p.status}
-                                                                </span>
-                                                            </div>
-                                                            <p className="text-sm font-bold text-slate-500 mb-4 text-left">{p.address}</p>
-                                                            
-                                                            {/* Exibição do Inquilino se houver */}
-                                                            {currentTenant ? (
-                                                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-4 flex items-center gap-3">
-                                                                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-900 shadow-sm border border-slate-200">
-                                                                        <Icon name="user" weight="bold" size={16}/>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Locado para</p>
-                                                                        <p className="text-xs font-bold text-slate-800 leading-none">{currentTenant.name}</p>
-                                                                    </div>
-                                                                </div>
-                                                            ) : p.status === 'Alugado' ? (
-                                                                <div className="bg-red-50 p-3 rounded-xl border border-red-100 mb-4 text-red-800 text-xs font-bold flex items-center gap-2">
-                                                                    <Icon name="warning" weight="bold"/> Inquilino não vinculado
-                                                                </div>
-                                                            ) : (
-                                                                <div className="h-14 mb-4 flex items-center text-slate-300 text-xs font-bold italic">
-                                                                    <Icon name="prohibit" className="mr-2"/> Sem ocupante
-                                                                </div>
-                                                            )}
+                                        {properties.map(p => (
+                                            <Card key={p.id} className="overflow-hidden group card-hover border-none shadow-md text-left">
+                                                <div className={`h-3 w-full ${p.status === 'Alugado' ? 'bg-blue-900' : (p.status === 'Vago' ? 'bg-red-500' : 'bg-yellow-500')}`}></div>
+                                                <div className="p-6 text-left">
+                                                    <h3 className="font-extrabold text-xl text-slate-800 mb-1 text-left">{p.nickname}</h3>
+                                                    <p className="text-sm font-bold text-slate-500 mb-4 text-left">{p.address}</p>
+                                                    <div className="flex justify-between items-center border-t border-slate-50 pt-4">
+                                                        <span className="font-extrabold text-xl text-slate-800">{formatCurrency(p.base_rent)}</span>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => openModal('property', p)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Icon name="pencil-simple" weight="bold"/></button>
+                                                            <button onClick={() => deleteItem(p.id, properties, setProperties)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Icon name="trash" weight="bold"/></button>
                                                         </div>
                                                     </div>
-
-                                                    <div className="px-6 pb-6 pt-0">
-                                                        <div className="flex justify-between items-center border-t border-slate-50 pt-4">
-                                                            <div>
-                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Base</p>
-                                                                <span className="font-extrabold text-xl text-slate-800">{formatCurrency(p.base_rent)}</span>
-                                                            </div>
-                                                            <div className="flex gap-2">
-                                                                <button onClick={() => openModal('property', p)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Icon name="pencil-simple" weight="bold"/></button>
-                                                                <button onClick={() => deleteItem(p.id, properties, setProperties, 'properties')} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Icon name="trash" weight="bold"/></button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </Card>
-                                            );
-                                        })}
+                                                </div>
+                                            </Card>
+                                        ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* INQUILINOS */}
                             {activeTab === 'tenants' && (
                                 <div className="space-y-8 animate-fade-in text-left">
                                     <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
                                         <h2 className="text-xl font-extrabold text-slate-800 uppercase tracking-tighter text-left">Locatários</h2>
                                         <button onClick={() => openModal('tenant')} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-extrabold flex items-center gap-2 shadow-lg transition-all transform hover:-translate-y-1"><Icon name="plus" weight="bold"/> NOVO INQUILINO</button>
                                     </div>
-                                    <Card className="p-0 overflow-x-auto border-none shadow-md">
-                                        <table className="w-full text-sm text-left font-bold text-left min-w-[600px]">
+                                    <Card className="p-0 overflow-hidden border-none shadow-md">
+                                        <table className="w-full text-sm text-left font-bold text-left">
                                             <thead className="bg-slate-50 text-slate-400 uppercase font-extrabold text-[10px] border-b border-slate-100 text-left">
-                                                <tr><th className="p-5">Nome</th><th className="p-5 text-center">Docs</th><th className="p-5 text-center">Status</th><th className="p-5 text-center">Ações</th></tr>
+                                                <tr><th className="p-5">Nome</th><th className="p-5">CPF</th><th className="p-5 text-center">Documentos</th><th className="p-5 text-center">Status</th><th className="p-5 text-center">Ações</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50 text-left">
                                                 {tenants.map(t => (
                                                     <tr key={t.id} className="hover:bg-slate-50 transition-colors text-slate-700 text-left text-left">
                                                         <td className="p-5">{t.name}</td>
-                                                        <td className="p-5 text-center"><span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.documents_checked ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.documents_checked ? 'Verificado':'Pendente'}</span></td>
+                                                        <td className="p-5 font-mono">{t.cpf}</td>
+                                                        <td className="p-5 text-center"><span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.documents_checked ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.documents_checked ? 'Verificados':'Pendentes'}</span></td>
                                                         <td className="p-5 text-center"><span className={`px-3 py-1 rounded-full text-[10px] uppercase font-extrabold ${t.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>{t.status}</span></td>
                                                         <td className="p-5 flex justify-center gap-3">
                                                             <a href={`https://wa.me/${t.phone}`} target="_blank" className="p-2 text-green-600 hover:bg-green-50 rounded-lg"><Icon name="whatsapp-logo" weight="bold" size={20}/></a>
                                                             <button onClick={() => openModal('tenant', t)} className="text-blue-500 hover:text-blue-700 transition-colors"><Icon name="pencil-simple" weight="bold" size={20}/></button>
-                                                            <button onClick={() => deleteItem(t.id, tenants, setTenants, 'tenants')} className="text-red-400 hover:text-red-600 transition-colors"><Icon name="trash" weight="bold" size={20}/></button>
+                                                            <button onClick={() => deleteItem(t.id, tenants, setTenants)} className="text-red-400 hover:text-red-600 transition-colors"><Icon name="trash" weight="bold" size={20}/></button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -967,7 +625,6 @@
                                 </div>
                             )}
 
-                            {/* CONTRATOS */}
                             {activeTab === 'contracts' && (
                                 <div className="space-y-8 animate-fade-in text-left text-left">
                                     <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-left text-left">
@@ -980,20 +637,18 @@
                                             const tenant = tenants.find(t => t.id === c.tenantId);
                                             return (
                                                 <Card key={c.id} className="p-6 flex flex-col md:flex-row justify-between items-center gap-6 border-l-8 border-l-blue-900 shadow-md text-left">
-                                                    <div className="flex items-center gap-5 flex-1 text-left w-full">
+                                                    <div className="flex items-center gap-5 flex-1 text-left">
                                                         <div className="w-12 h-12 bg-blue-50 text-blue-900 rounded-xl flex items-center justify-center font-bold text-xl"><Icon name="file-pdf" weight="fill"/></div>
                                                         <div className="text-left text-left">
                                                             <h3 className="font-extrabold text-lg text-slate-800 uppercase tracking-tighter">{prop?.nickname || 'Ativo Excluído'}</h3>
                                                             <p className="text-sm font-bold text-slate-500">Locatário: {tenant?.name || 'Não identificado'}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-8 text-right text-left w-full md:w-auto justify-between md:justify-end">
+                                                    <div className="flex items-center gap-8 text-right text-left">
                                                         <div className="text-right text-left text-left"><p className="text-[10px] text-slate-400 uppercase font-extrabold tracking-widest">Aluguer</p><p className="text-2xl font-black text-slate-800">{formatCurrency(c.rent_value)}</p></div>
                                                         <div className="flex gap-2">
-                                                            <button onClick={() => openModal('contract_view', c)} className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Icon name="eye" weight="bold"/></button>
-                                                            {c.fileData && <button onClick={() => downloadContract(c)} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all"><Icon name="download-simple" weight="bold"/></button>}
+                                                            {c.fileName && <button onClick={() => showToast(`Download do ficheiro ${c.fileName}`, 'info')} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all"><Icon name="download-simple" weight="bold"/></button>}
                                                             <button onClick={() => openModal('contract', c)} className="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors"><Icon name="pencil-simple" weight="bold"/></button>
-                                                            <button onClick={() => deleteItem(c.id, contracts, setContracts, 'contracts')} className="p-3 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors"><Icon name="trash" weight="bold"/></button>
                                                         </div>
                                                     </div>
                                                 </Card>
@@ -1003,15 +658,14 @@
                                 </div>
                             )}
 
-                            {/* FINANCEIRO */}
                             {activeTab === 'finance' && (
                                 <div className="space-y-8 animate-fade-in text-left">
                                     <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-left">
                                         <h2 className="text-xl font-extrabold text-slate-800 uppercase tracking-tighter text-left">Tesouraria</h2>
                                         <button onClick={() => openModal('finance')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl text-sm font-extrabold flex items-center gap-2 shadow-lg transition-all transform hover:-translate-y-1"><Icon name="plus" weight="bold"/> LANÇAMENTO</button>
                                     </div>
-                                    <Card className="p-0 overflow-x-auto border-none shadow-md text-left">
-                                        <table className="w-full text-sm text-left font-bold text-left min-w-[600px]">
+                                    <Card className="p-0 overflow-hidden border-none shadow-md text-left">
+                                        <table className="w-full text-sm text-left font-bold text-left">
                                             <thead className="bg-slate-50 text-slate-400 uppercase font-extrabold text-[10px] border-b border-slate-100 text-left">
                                                 <tr><th className="p-5">Data</th><th className="p-5">Descrição</th><th className="p-5 text-right">Valor</th><th className="p-5 text-center">Status</th><th className="p-5 text-center">Ações</th></tr>
                                             </thead>
@@ -1024,7 +678,7 @@
                                                         <td className="p-5 text-center"><span className={`px-3 py-1 rounded-full text-[10px] uppercase font-extrabold ${f.status === 'Pago' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{f.status}</span></td>
                                                         <td className="p-5 flex justify-center gap-3">
                                                             {f.type === 'Receita' && <button onClick={() => openModal('receipt', f)} className="text-slate-400 hover:text-blue-900"><Icon name="receipt" weight="bold" size={20}/></button>}
-                                                            <button onClick={() => deleteItem(f.id, financial, setFinancial, 'financial')} className="text-red-300 hover:text-red-500"><Icon name="trash" weight="bold" size={20}/></button>
+                                                            <button onClick={() => deleteItem(f.id, financial, setFinancial)} className="text-red-300 hover:text-red-500"><Icon name="trash" weight="bold" size={20}/></button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -1034,22 +688,21 @@
                                 </div>
                             )}
 
-                            {/* RELATÓRIOS */}
                             {activeTab === 'reports' && (
                                 <div className="space-y-8 animate-fade-in text-left text-left">
                                     <h2 className="text-xl font-extrabold text-slate-800 uppercase tracking-tighter">Relatórios Master</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left text-center">
                                         <Card className="p-8 hover:shadow-lg transition-all cursor-pointer group border-b-4 border-b-blue-900 text-center" onClick={() => openModal('report_finance')}>
                                             <div className="p-4 bg-blue-50 text-blue-900 rounded-2xl group-hover:scale-110 transition-transform mx-auto w-fit text-center"><Icon name="currency-dollar" size={40} weight="duotone" /></div>
-                                            <h3 className="font-extrabold text-xl text-slate-700 mt-4 uppercase text-center">Fluxo Financeiro</h3>
+                                            <h3 className="font-extrabold text-xl text-slate-700 mt-4 uppercase text-center">Balanço</h3>
                                         </Card>
                                         <Card className="p-8 hover:shadow-lg transition-all cursor-pointer group border-b-4 border-b-green-900 text-center" onClick={() => openModal('report_occupancy')}>
                                             <div className="p-4 bg-green-50 text-green-900 rounded-2xl group-hover:scale-110 transition-transform mx-auto w-fit text-center"><Icon name="house-line" size={40} weight="duotone" /></div>
-                                            <h3 className="font-extrabold text-xl text-slate-700 mt-4 uppercase text-center">Ativos Ocupados</h3>
+                                            <h3 className="font-extrabold text-xl text-slate-700 mt-4 uppercase text-center">Ocupação</h3>
                                         </Card>
                                         <Card className="p-8 hover:shadow-lg transition-all cursor-pointer group border-b-4 border-b-purple-900 text-center" onClick={() => openModal('report_tenants')}>
                                             <div className="p-4 bg-purple-50 text-purple-900 rounded-2xl group-hover:scale-110 transition-transform mx-auto w-fit text-center"><Icon name="users-three" size={40} weight="duotone" /></div>
-                                            <h3 className="font-extrabold text-xl text-slate-700 mt-4 uppercase text-center">Locatários</h3>
+                                            <h3 className="font-extrabold text-xl text-slate-700 mt-4 uppercase text-center">Inquilinos</h3>
                                         </Card>
                                     </div>
                                 </div>
@@ -1083,142 +736,97 @@
                         </div>
                     </main>
 
-                    {/* MODAL UNIVERSAL - CORREÇÃO DE SINTAXE JSX */}
+                    {/* MODAL UNIVERSAL */}
                     {isModalOpen && (
                         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in print:p-0 print:bg-white text-left">
-                            <div className={`bg-white rounded-[2.5rem] shadow-2xl w-full ${['contract_view', 'receipt', 'report_finance', 'report_occupancy', 'report_tenants'].includes(modalType) ? 'max-w-7xl' : (['receipt', 'report_finance', 'report_occupancy', 'report_tenants'].includes(modalType) ? 'max-w-4xl' : 'max-w-md')} overflow-hidden relative print:shadow-none print:max-w-full print:rounded-none border-t-8 border-blue-900 text-left flex flex-col`}>
-                                <div className="bg-white p-6 text-slate-800 flex justify-between items-center no-print border-b border-slate-100 text-left sticky top-0 z-10 shrink-0">
+                            <div className={`bg-white rounded-[2.5rem] shadow-2xl w-full ${['contract_view', 'receipt', 'report_finance', 'report_occupancy', 'report_tenants'].includes(modalType) ? 'max-w-4xl' : 'max-w-md'} overflow-hidden relative print:shadow-none print:max-w-full print:rounded-none border-t-8 border-blue-900 text-left`}>
+                                <div className="bg-white p-6 text-slate-800 flex justify-between items-center no-print border-b border-slate-100 text-left">
                                     <h3 className="font-extrabold text-xl uppercase tracking-tighter text-left">
-                                        {modalType === 'property' && 'Auditoria do Ativo'}
+                                        {modalType === 'property' && 'Ficha Jurídica do Ativo'}
                                         {modalType === 'tenant' && 'Ficha de Locatário'}
-                                        {modalType === 'contract' && 'Upload de Ficheiro Contratual'}
-                                        {modalType === 'finance' && 'Registo de Tesouraria'}
+                                        {modalType === 'contract' && 'Fazer Upload de Contrato'}
+                                        {modalType === 'finance' && 'Tesouraria Master'}
                                         {modalType === 'receipt' && 'Recibo de Quitação'}
                                         {modalType.startsWith('report_') && 'Painel Master de Auditoria'}
-                                        {modalType === 'contract_view' && 'Visualizador de Documentos'}
                                     </h3>
-                                    <button onClick={closeModal} className="bg-slate-100 p-2 rounded-xl text-slate-400 hover:text-red-500 transition-colors"><Icon name="x" weight="bold" size={24}/></button>
+                                    <button onClick={() => setIsModalOpen(false)} className="bg-slate-100 p-2 rounded-xl text-slate-400 hover:text-red-500 transition-colors"><Icon name="x" weight="bold" size={24}/></button>
                                 </div>
 
-                                {/* MODAL DE VISUALIZAÇÃO DE CONTRATO (RENDERIZADOR NATIVO PDF.JS) */}
                                 {modalType === 'contract_view' && editingItem ? (
-                                    <div className="flex flex-col h-[85vh] bg-slate-100">
-                                        <div className="bg-white px-6 py-4 border-b border-slate-200 flex justify-between items-center shadow-sm z-10 gap-4 shrink-0">
-                                            <div className="flex items-center gap-4">
-                                                <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                                                    <Icon name="file-pdf" className="text-red-600"/> 
-                                                    <span className="truncate max-w-[200px]">{editingItem.fileName || 'Documento'}</span>
-                                                </h3>
-                                                
-                                                {/* Controles de Paginação */}
-                                                {pageCount > 1 && (
-                                                    <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1 border border-slate-200">
-                                                        <button onClick={() => changePage(-1)} disabled={pageNum <= 1} className="p-2 hover:bg-white rounded shadow-sm disabled:opacity-50 transition-colors"><Icon name="caret-left" weight="bold"/></button>
-                                                        <span className="text-xs font-bold px-2 whitespace-nowrap">Pág {pageNum} / {pageCount}</span>
-                                                        <button onClick={() => changePage(1)} disabled={pageNum >= pageCount} className="p-2 hover:bg-white rounded shadow-sm disabled:opacity-50 transition-colors"><Icon name="caret-right" weight="bold"/></button>
-                                                    </div>
-                                                )}
-
-                                                {/* Controles de Zoom */}
-                                                <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1 border border-slate-200 ml-2">
-                                                    <button onClick={() => changeZoom(-0.25)} className="p-2 hover:bg-white rounded shadow-sm transition-colors" title="Diminuir Zoom"><Icon name="minus" weight="bold"/></button>
-                                                    <span className="text-xs font-bold px-2 w-12 text-center">{Math.round(pdfScale * 100)}%</span>
-                                                    <button onClick={() => changeZoom(0.25)} className="p-2 hover:bg-white rounded shadow-sm transition-colors" title="Aumentar Zoom"><Icon name="plus" weight="bold"/></button>
-                                                </div>
+                                    <div className="p-12 print-area text-left" id="print-area-container">
+                                        <div className="text-center mb-10 pb-6 border-b-2 border-black">
+                                            <h1 className="font-black text-2xl uppercase text-blue-900">GESTÃO MASTER - DOCUMENTAÇÃO</h1>
+                                        </div>
+                                        <div className="contract-body text-base space-y-6 text-left">
+                                            <p><strong>DAS PARTES:</strong> Locação regida pela Administração Mestre GESTÃO MASTER entre o Locador e o Locatário <strong>{tenants.find(t=>t.id===editingItem.tenantId)?.name}</strong>.</p>
+                                            <p><strong>REAJUSTE:</strong> O valor mensal de <strong>{formatCurrency(editingItem.rent_value)}</strong> será reajustado em conformidade com o índice pactuado.</p>
+                                            <br/><br/><br/><br/>
+                                            <div className="flex justify-between text-center gap-10">
+                                                <div className="w-1/2 border-t border-black pt-2 font-black uppercase text-[10px]">Administração Master</div>
+                                                <div className="w-1/2 border-t border-black pt-2 font-black uppercase text-[10px]">Assinatura Locatário</div>
                                             </div>
-                                            
-                                            {editingItem.fileData && (
-                                                <button onClick={() => downloadContract(editingItem)} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs uppercase tracking-wide hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-sm">
-                                                    <Icon name="download-simple" weight="bold"/> Baixar
-                                                </button>
-                                            )}
                                         </div>
-
-                                        <div className="flex-1 bg-slate-500 overflow-auto relative flex justify-center p-8">
-                                            {/* Canvas onde o PDF será desenhado */}
-                                            {editingItem.fileData && editingItem.fileData.includes('pdf') ? (
-                                                <div className="shadow-2xl border border-slate-600 bg-white">
-                                                    <canvas id="pdf-canvas" className="block"></canvas>
-                                                </div>
-                                            ) : editingItem.fileData ? (
-                                                <div className="shadow-2xl border border-slate-600 bg-white" style={{ width: `${pdfScale * 100}%`, maxWidth: 'none' }}>
-                                                    <img src={editingItem.fileData} className="w-full h-auto block" alt="Documento" />
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center text-white/50 h-full">
-                                                    <Icon name="file-x" size={64} className="mb-4 opacity-50"/>
-                                                    <p className="font-bold text-lg">Visualização Indisponível</p>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <button onClick={() => window.print()} className="mt-10 w-full p-4 bg-blue-900 text-white font-black rounded-2xl no-print uppercase tracking-widest text-xs">Imprimir Instrumento</button>
                                     </div>
                                 ) : modalType === 'receipt' && editingItem ? (
-                                    <div className="p-10 print-area text-left" id="print-area-container">
-                                        <div className="recibo-box text-left bg-white border-2 border-dashed border-slate-300 p-8 rounded-xl shadow-sm">
-                                            <div className="text-center mb-8">
-                                                <h1 className="font-black text-3xl uppercase text-slate-800 mb-2">Recibo de Pagamento</h1>
-                                                <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Gestão Master Imobiliária</p>
-                                            </div>
-                                            
-                                            <div className="text-lg space-y-6 text-slate-700">
-                                                <p>Recebemos a quantia de <strong className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg border border-emerald-200">{formatCurrency(editingItem.value)}</strong></p>
-                                                <p><strong>Referente a:</strong> <span className="uppercase font-bold">{editingItem.description}</span></p>
-                                                
-                                                <div className="flex justify-between items-center mt-12 pt-8 border-t-2 border-slate-100">
-                                                    <div>
-                                                        <p className="font-bold text-slate-500 text-sm uppercase tracking-wider">Data de Emissão</p>
-                                                        <p className="font-bold text-xl">{new Date().toLocaleDateString()}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="w-64 h-px bg-slate-400 mb-2"></div>
-                                                        <p className="font-bold text-[10px] uppercase text-slate-400 tracking-widest">Assinatura do Responsável</p>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div className="p-10 print-area text-left text-left" id="print-area-container">
+                                        <div className="recibo-box text-left">
+                                            <h1 className="text-center font-black text-3xl mb-8 text-blue-900 uppercase">Recibo Master</h1>
+                                            <p className="text-xl">Recebemos a quantia de <strong className="bg-slate-100 px-2 rounded-lg">{formatCurrency(editingItem.value)}</strong> referente à liquidação Master.</p>
+                                            <br/><br/>
+                                            <p className="text-right font-bold text-slate-400">Data de Emissão: {new Date().toLocaleDateString()}</p>
                                         </div>
-                                        <div className="mt-8 flex justify-center no-print">
-                                            <button type="button" onClick={() => handlePrintReceipt(editingItem)} className="px-10 py-4 bg-blue-900 text-white font-black rounded-2xl hover:bg-black uppercase tracking-widest text-xs shadow-xl flex items-center gap-2 transform hover:-translate-y-1 transition-all">
-                                                <Icon name="printer" weight="bold" size={24} /> Imprimir Recibo Agora
-                                            </button>
+                                        <div className="mt-8 flex justify-center no-print text-left">
+                                            <button type="button" onClick={() => window.print()} className="px-10 py-4 bg-blue-900 text-white font-black rounded-2xl hover:bg-black uppercase tracking-widest text-xs"><Icon name="printer" weight="bold" className="mr-2"/> Imprimir Recibo</button>
                                         </div>
                                     </div>
                                 ) : modalType.startsWith('report_') ? (
-                                    <div className="p-10 text-center">
-                                        <div className="mb-8">
-                                            <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-900 mb-4">
-                                                <Icon name="file-doc" size={48} weight="duotone"/>
-                                            </div>
-                                            <h2 className="text-2xl font-black text-slate-800">Pronto para Exportação</h2>
-                                            <p className="text-slate-500 font-bold mt-2">O relatório completo será gerado em formato compatível com Word (.doc).</p>
+                                    <div className="p-8 print-area text-left" id="print-area-container">
+                                        <div className="text-center mb-10 pb-6 border-b-2 border-blue-900">
+                                            <h1 className="font-black text-3xl uppercase text-blue-900">GESTÃO MASTER</h1>
+                                            <p className="font-bold text-slate-400 tracking-widest uppercase text-xs mt-1">Relatório Oficial</p>
+                                            <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-widest">Emissão: {new Date().toLocaleDateString()}</p>
                                         </div>
-                                        <button onClick={() => generateReportDOC(modalType)} className="w-full py-4 bg-blue-800 hover:bg-blue-900 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1"><Icon name="download-simple" weight="bold" size={24}/> BAIXAR RELATÓRIO (DOC)</button>
+                                        <table className="print-table text-left">
+                                            <thead>
+                                                <tr>
+                                                    {modalType === 'report_finance' && <><th className="p-4">Data</th><th className="p-4">Descrição</th><th className="p-4">Valor</th></>}
+                                                    {modalType === 'report_occupancy' && <><th className="p-4">Imóvel</th><th className="p-4">Status</th><th className="p-4">Jurídico</th></>}
+                                                    {modalType === 'report_tenants' && <><th className="p-4">Nome</th><th className="p-4">Documentos</th><th className="p-4">Telefone</th></>}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {modalType === 'report_finance' && financial.map(f=>(<tr key={f.id}><td>{f.date}</td><td>{f.description}</td><td>{formatCurrency(f.value)}</td></tr>))}
+                                                {modalType === 'report_occupancy' && properties.map(p=>(<tr key={p.id}><td>{p.nickname}</td><td>{p.status}</td><td>{p.legal_status}</td></tr>))}
+                                                {modalType === 'report_tenants' && tenants.map(t=>(<tr key={t.id}><td>{t.name}</td><td>{t.documents_checked ? 'Completo':'Pendente'}</td><td>{t.phone}</td></tr>))}
+                                            </tbody>
+                                        </table>
+                                        <div className="mt-10 flex justify-end gap-3 no-print">
+                                            <button type="button" onClick={() => generateReportCSV(modalType.replace('report_', ''))} className="px-5 py-3 bg-blue-100 text-blue-900 font-extrabold rounded-xl hover:bg-blue-200 flex items-center gap-2"><Icon name="file-csv" weight="bold"/> Exportar CSV</button>
+                                            <button type="button" onClick={() => window.print()} className="px-5 py-3 bg-blue-900 text-white font-extrabold rounded-xl hover:bg-black flex items-center gap-2 shadow-lg"><Icon name="printer" weight="bold"/> Imprimir PDF</button>
+                                            <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl">Fechar</button>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <form onSubmit={saveItem} className="p-8 space-y-6 text-left font-bold text-slate-700 overflow-y-auto">
+                                    <form onSubmit={saveItem} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto text-left font-bold text-slate-700">
                                         {modalType === 'property' && (
                                             <>
-                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Apelido do Imóvel</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl outline-none focus:border-blue-900 font-bold" value={propertyForm.nickname} onChange={e => setPropertyForm({...propertyForm, nickname: e.target.value})} /></div>
-                                                
-                                                <div className="flex gap-4 text-left">
+                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Identificação Ativo</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl outline-none focus:border-blue-900 transition-all font-bold" value={propertyForm.nickname} onChange={e => setPropertyForm({...propertyForm, nickname: e.target.value})} placeholder="Ex: Casa Jardim"/></div>
+                                                <div className="flex gap-4">
                                                     <div className="flex-1">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest text-left">Classificação Master</label>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Estatuto Jurídico Master</label>
                                                         <select className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={propertyForm.legal_status} onChange={e => setPropertyForm({...propertyForm, legal_status: e.target.value})}>
-                                                            <option>Regular</option><option>Espólio</option><option>Inventário em Trâmite</option><option>Nome de Parente</option><option>Usucapião</option><option>Contrato de Gaveta</option><option>Financiado</option><option>Judicial</option><option>Penhora</option>
+                                                            <option>Regular</option><option>Espólio</option><option>Inventário em Trâmite</option><option>Nome de Parente</option><option>Usucapião</option><option>Contrato de Gaveta</option><option>Financiado</option><option>Judicial</option><option>Pendente Habite-se</option><option>Dívida Ativa / Penhora</option>
                                                         </select>
                                                     </div>
                                                     <div className="flex-1">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest text-left">Status de Ocupação</label>
-                                                        <select className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={propertyForm.status} onChange={e => setPropertyForm({...propertyForm, status: e.target.value})}>
-                                                            <option value="Vago">Vago</option>
-                                                            <option value="Alugado">Alugado</option>
-                                                            <option value="Reforma">Em Reforma</option>
-                                                            <option value="Indisponivel">Indisponível</option>
-                                                        </select>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Tipologia</label>
+                                                        <select className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={propertyForm.type} onChange={e => setPropertyForm({...propertyForm, type: e.target.value})}>
+                                                            <option>Casa</option><option>Apartamento</option><option>Comercial</option></select>
                                                     </div>
                                                 </div>
-
                                                 <div className="bg-blue-50/50 p-6 rounded-3xl border-2 border-blue-100/50 text-left">
-                                                    <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-widest mb-4">Certificação de Documentos</h4>
+                                                    <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-widest mb-4 text-left">Certificação de Documentos</h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-left">
                                                         <label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-5 h-5" checked={propertyForm.doc_registration} onChange={e=>setPropertyForm({...propertyForm, doc_registration:e.target.checked})} /><span className="text-[10px] uppercase">Matrícula</span></label>
                                                         <label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-5 h-5" checked={propertyForm.doc_deed} onChange={e=>setPropertyForm({...propertyForm, doc_deed:e.target.checked})} /><span className="text-[10px] uppercase">Escritura</span></label>
@@ -1226,34 +834,19 @@
                                                     </div>
                                                     <textarea className="w-full p-4 border-2 border-white rounded-2xl focus:border-blue-900 transition-all font-bold h-24 text-xs italic" value={propertyForm.legal_notes} onChange={e => setPropertyForm({...propertyForm, legal_notes: e.target.value})} placeholder="Registe aqui as notas jurídicas master, processos e herdeiros..."></textarea>
                                                 </div>
-                                                <input type="number" className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={propertyForm.base_rent} onChange={e => setPropertyForm({...propertyForm, base_rent: e.target.value})} placeholder="Valor do Aluguel (R$)" />
+                                                <input type="number" className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={propertyForm.base_rent} onChange={e => setPropertyForm({...propertyForm, base_rent: e.target.value})} placeholder="Avaliação Mestre (R$)" />
                                             </>
                                         )}
 
-                                        {/* FORMULÁRIO DE INQUILINO ADICIONADO AQUI */}
                                         {modalType === 'tenant' && (
                                             <>
-                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Nome Completo</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl outline-none focus:border-blue-900 font-bold" placeholder="Nome do Inquilino" value={tenantForm.name} onChange={e => setTenantForm({...tenantForm, name: e.target.value})} /></div>
-                                                
-                                                {/* CAMPO DE IMÓVEL ADICIONADO AQUI */}
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Imóvel Locado (Opcional)</label>
-                                                    <select className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold outline-none focus:border-blue-900" value={tenantForm.propertyId || ''} onChange={e => setTenantForm({...tenantForm, propertyId: e.target.value})}>
-                                                        <option value="">Nenhum / Aguardando Contrato</option>
-                                                        {properties.map(p => (
-                                                            <option key={p.id} value={p.id}>{p.nickname} ({p.status})</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-
+                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Nome Completo</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={tenantForm.name} onChange={e => setTenantForm({...tenantForm, name: e.target.value})} /></div>
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">CPF / NIF</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" placeholder="000.000.000-00" value={tenantForm.cpf} onChange={e => setTenantForm({...tenantForm, cpf: e.target.value})} /></div>
-                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Telefone</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" placeholder="WhatsApp" value={tenantForm.phone} onChange={e => setTenantForm({...tenantForm, phone: e.target.value})} /></div>
+                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">CPF/NIF</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={tenantForm.cpf} onChange={e => setTenantForm({...tenantForm, cpf: e.target.value})} /></div>
+                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">WhatsApp</label><input required className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={tenantForm.phone} onChange={e => setTenantForm({...tenantForm, phone: e.target.value})} /></div>
                                                 </div>
-                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Email</label><input type="email" required className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" placeholder="email@exemplo.com" value={tenantForm.email} onChange={e => setTenantForm({...tenantForm, email: e.target.value})} /></div>
-                                                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
-                                                    <input type="checkbox" className="w-6 h-6 text-blue-900" checked={tenantForm.documents_checked} onChange={e => setTenantForm({...tenantForm, documents_checked: e.target.checked})} />
-                                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Documentação Verificada?</span>
+                                                <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border">
+                                                    <input type="checkbox" className="w-5 h-5 text-blue-900 border-2 rounded-lg" checked={tenantForm.documents_checked} onChange={e => setTenantForm({...tenantForm, documents_checked: e.target.checked})} /><label className="text-xs font-black uppercase text-slate-500 tracking-widest">Docs Verificados</label>
                                                 </div>
                                             </>
                                         )}
@@ -1261,8 +854,8 @@
                                         {modalType === 'contract' && (
                                             <>
                                                 <div className="flex gap-4 text-left">
-                                                    <div className="flex-1 text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Vincular Ativo (Obrigatório)</label><select required className="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold" value={contractForm.propertyId} onChange={e => setContractForm({...contractForm, propertyId: e.target.value})}><option value="">Selecione o Imóvel...</option>{properties.map(p=><option key={p.id} value={p.id}>{p.nickname} ({p.status})</option>)}</select></div>
-                                                    <div className="flex-1 text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Locatário</label><select required className="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold" value={contractForm.tenantId} onChange={e => setContractForm({...contractForm, tenantId: e.target.value})}><option value="">Selecionar...</option>{tenants.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+                                                    <div className="flex-1 text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Vincular Ativo</label><select required className="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold" value={contractForm.propertyId} onChange={e => setContractForm({...contractForm, propertyId: e.target.value})}><option value="">Selecionar Ativo...</option>{properties.filter(p=>p.status==='Vago' || p.id === editingItem?.propertyId).map(p=><option key={p.id} value={p.id}>{p.nickname}</option>)}</select></div>
+                                                    <div className="flex-1 text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Locatário</label><select required className="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold" value={contractForm.tenantId} onChange={e => setContractForm({...contractForm, tenantId: e.target.value})}><option value="">Selecionar Locatário...</option>{tenants.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4 text-left text-left">
                                                     <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Renda Mensal (R$)</label><input type="number" required className="w-full p-4 border-2 border-slate-50 rounded-2xl font-bold" value={contractForm.rent_value} onChange={e => setContractForm({...contractForm, rent_value: e.target.value})} /></div>
@@ -1270,14 +863,9 @@
                                                 </div>
                                                 <div className="p-10 border-2 border-dashed border-blue-900/20 rounded-[2rem] bg-blue-50/30 text-center relative overflow-hidden group hover:bg-blue-900 transition-all cursor-pointer text-center">
                                                     <Icon name="cloud-arrow-up" size={48} className="mx-auto mb-3 text-blue-900 group-hover:text-white transition-colors" />
-                                                    <p className="text-xs font-black uppercase text-blue-900 group-hover:text-white transition-colors tracking-widest">{contractForm.fileName || "Clique para Selecionar o Arquivo PDF"}</p>
-                                                    <input type="file" accept="application/pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
+                                                    <p className="text-xs font-black uppercase text-blue-900 group-hover:text-white transition-colors tracking-widest">{contractForm.fileName || "Anexar Digitalização Master"}</p>
+                                                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e=>setContractForm({...contractForm, fileName: e.target.files[0]?.name || ''})} />
                                                 </div>
-                                                <div className="bg-red-50 border border-red-100 p-3 rounded-xl flex items-center gap-2 justify-center">
-                                                    <Icon name="warning-circle" className="text-red-500" weight="bold"/>
-                                                    <p className="text-[10px] text-red-600 font-bold uppercase">Atenção: O sistema aceita apenas arquivos no formato PDF.</p>
-                                                </div>
-                                                <p className="text-[10px] text-center text-slate-400 font-bold">Máximo 800KB para modo demonstração</p>
                                             </>
                                         )}
 
@@ -1293,7 +881,7 @@
                                         )}
 
                                         <div className="pt-6 flex justify-end gap-3 border-t text-left">
-                                            <button type="button" onClick={closeModal} className="px-6 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl text-[10px] uppercase tracking-widest transition-all">Cancelar</button>
+                                            <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl text-[10px] uppercase tracking-widest transition-all">Sair</button>
                                             <button type="submit" className="px-10 py-4 bg-blue-900 text-white font-black rounded-2xl shadow-xl flex items-center gap-2 transform hover:-translate-y-1 transition-all text-[10px] uppercase tracking-widest"><Icon name="check" weight="bold"/> Confirmar Registo</button>
                                         </div>
                                     </form>
@@ -1301,6 +889,11 @@
                             </div>
                         </div>
                     )}
+                    
+                    <footer className="mt-12 py-6 text-center text-xs text-slate-400 border-t border-slate-100">
+                        <p>© 2026 SoftGestão. Todos os direitos reservados.</p>
+                        <p className="mt-1">Propriedade e Marca Registada de <span className="font-bold text-slate-600">Adriana Mendes da Cruz Sousa</span>.</p>
+                    </footer>
                 </div>
             );
         }
