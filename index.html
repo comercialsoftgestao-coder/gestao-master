@@ -27,7 +27,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
 
-    <!-- Firebase (Versão Compatibilidade) -->
+    <!-- Firebase (Versão Compatibilidade para manter o código intacto) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -37,14 +37,13 @@
     <style>
         body { font-family: 'Nunito', sans-serif; background-color: #fdfdfd; user-select: none; }
         
-        /* Estilo da padronagem de fundo atualizado para tons de dourado suave */
         .bg-pattern-houses {
             background-color: #ffffff;
             background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f59e0b' fill-opacity='0.1'%3E%3Cpath d='M40 10 L55 25 L55 45 L25 45 L25 25 Z' /%3E%3Cpath d='M10 50 L20 60 L20 75 L0 75 L0 60 Z' opacity='0.5'/%3E%3Cpath d='M70 50 L80 60 L80 75 L60 75 L60 60 Z' opacity='0.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-track { background: #001529; }
         ::-webkit-scrollbar-thumb { background: #d97706; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #b45309; }
         
@@ -54,7 +53,6 @@
         .card-hover { transition: all 0.3s ease; }
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(180, 83, 9, 0.1); }
 
-        /* Estilos de Impressão */
         .print-area { font-family: 'Times New Roman', serif; line-height: 1.6; color: #000; }
         .recibo-box { border: 2px dashed #000; padding: 40px; margin: 20px 0; background: #fff; width: 100%; box-sizing: border-box; }
 
@@ -62,16 +60,8 @@
             body * { visibility: hidden; }
             #print-area-container, #print-area-container * { visibility: visible; }
             #print-area-container { 
-                position: fixed; 
-                left: 0; 
-                top: 0; 
-                width: 100%; 
-                height: 100%; 
-                margin: 0; 
-                padding: 40px; 
-                background: white !important; 
-                z-index: 99999;
-                display: block !important;
+                position: fixed; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 40px; 
+                background: white !important; z-index: 99999; display: block !important;
             }
             .no-print { display: none !important; }
         }
@@ -91,19 +81,19 @@
             appId: "1:61242084578:web:e1f4fd6a1287bfd3b422bb"
         };
 
+        // Verifica se o Firebase já foi inicializado para evitar erros de reinicialização
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
-        
-        const db = firebase.firestore(); 
-        // ------------------------------------------------------------------
+
+        // Inicializa o Firestore Database
+        const db = firebase.firestore();
 
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- TOAST ---
         const Toast = ({ message, type, show, onClose }) => {
             if (!show) return null;
-            const bgClass = type === 'error' ? 'bg-red-500' : (type === 'success' ? 'bg-amber-600' : 'bg-black');
+            const bgClass = type === 'error' ? 'bg-red-500' : (type === 'success' ? 'bg-amber-600' : 'bg-[#002147]');
             return (
                 <div className={`fixed top-4 right-4 ${bgClass} text-white px-4 py-3 rounded-xl shadow-xl z-[60] flex items-center gap-3 animate-fade-in border-2 border-amber-500/20 text-sm`}>
                     <i className={type === 'error' ? "ph ph-warning-circle text-xl" : "ph ph-check-circle text-xl"}></i>
@@ -113,7 +103,6 @@
             );
         };
 
-        // --- CHART ---
         const ChartComponent = ({ type, data, options }) => {
             const chartRef = useRef(null);
             const canvasRef = useRef(null);
@@ -127,10 +116,9 @@
             return <div className="relative h-full w-full"><canvas ref={canvasRef}></canvas></div>;
         };
 
-        // --- LOGO (PRETO E DOURADO) ---
         const BrandLogo = ({ className = "" }) => (
             <div className={`flex items-center gap-3 ${className}`}>
-                <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-black shadow-sm border border-amber-300">
+                <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-[#002147] shadow-sm border border-amber-300">
                     <i className="ph-fill ph-house text-2xl"></i>
                 </div>
                 <div>
@@ -148,7 +136,6 @@
 
         const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
-        // --- TELA DE LOGIN (PRETO E DOURADO) ---
         const LoginScreen = ({ onLogin }) => {
             const [user, setUser] = useState('');
             const [pass, setPass] = useState('');
@@ -158,28 +145,23 @@
                 const savedLogin = localStorage.getItem('gestaomaster_remember');
                 if (savedLogin) {
                     const { user: savedUser, pass: savedPass } = JSON.parse(savedLogin);
-                    setUser(savedUser);
-                    setPass(savedPass);
-                    setRemember(true);
+                    setUser(savedUser); setPass(savedPass); setRemember(true);
                 }
             }, []);
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                if (remember) {
-                    localStorage.setItem('gestaomaster_remember', JSON.stringify({ user, pass }));
-                } else {
-                    localStorage.removeItem('gestaomaster_remember');
-                }
+                if (remember) localStorage.setItem('gestaomaster_remember', JSON.stringify({ user, pass }));
+                else localStorage.removeItem('gestaomaster_remember');
                 onLogin(user, pass);
             };
 
             return (
-                <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden bg-pattern-houses text-sm">
+                <div className="min-h-screen flex items-center justify-center bg-[#002147] relative overflow-hidden bg-pattern-houses text-sm">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm z-10 border border-amber-500/30 animate-fade-in mx-4">
                         <div className="flex justify-center mb-6">
                             <div className="flex flex-col items-center gap-2">
-                                <div className="w-14 h-14 bg-black rounded-full flex items-center justify-center text-amber-500 shadow-lg border-4 border-amber-500">
+                                <div className="w-14 h-14 bg-[#002147] rounded-full flex items-center justify-center text-amber-500 shadow-lg border-4 border-amber-500">
                                     <i className="ph-fill ph-house text-3xl"></i>
                                 </div>
                                 <h1 className="text-2xl font-extrabold text-slate-800 uppercase tracking-tighter">GESTÃO <span className="text-amber-600">MASTER</span></h1>
@@ -189,20 +171,18 @@
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="relative">
                                 <span className="absolute left-3 top-2.5 text-amber-500"><Icon name="user" weight="bold"/></span>
-                                <input type="text" className="w-full p-2.5 pl-10 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-amber-500 focus:bg-white transition-all font-semibold text-slate-600" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Utilizador" />
+                                <input type="text" className="w-full p-2.5 pl-10 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-amber-500 focus:bg-white transition-all font-semibold text-slate-600" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Usuário" />
                             </div>
                             <div className="relative">
                                 <span className="absolute left-3 top-2.5 text-amber-500"><Icon name="lock" weight="bold"/></span>
                                 <input type="password" className="w-full p-2.5 pl-10 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-amber-500 focus:bg-white transition-all font-semibold text-slate-600" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Senha" />
                             </div>
-                            
                             <div className="flex items-center">
-                                <input id="remember-me" type="checkbox" className="w-4 h-4 text-black bg-gray-100 border-gray-300 rounded focus:ring-amber-500" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                                <input id="remember-me" type="checkbox" className="w-4 h-4 text-[#002147] bg-gray-100 border-gray-300 rounded focus:ring-amber-500" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                                 <label htmlFor="remember-me" className="ml-2 text-xs font-bold text-slate-500 cursor-pointer">Lembrar meus dados</label>
                             </div>
-
-                            <button type="submit" className="w-full bg-gradient-to-r from-black to-slate-900 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg shadow-amber-900/20 transform hover:scale-[1.02] transition-all text-sm">
-                                <span>ENTRAR NO SISTEMA</span> <Icon name="arrow-right" weight="bold" />
+                            <button type="submit" className="w-full bg-gradient-to-r from-[#002147] to-slate-900 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 shadow-lg shadow-amber-900/20 transform hover:scale-[1.02] transition-all text-sm text-center">
+                                ENTRAR NO SISTEMA <Icon name="arrow-right" weight="bold" />
                             </button>
                         </form>
                     </div>
@@ -210,12 +190,11 @@
             );
         };
 
-        // --- APP PRINCIPAL ---
         function App() {
             const [appState, setAppState] = useState('login'); 
             const [syncStatus, setSyncStatus] = useState('idle'); 
-            const [previewUrl, setPreviewUrl] = useState(null); 
             const [searchTerm, setSearchTerm] = useState(''); 
+            const [situationFilter, setSituationFilter] = useState('all');
             
             const [pageNum, setPageNum] = useState(1);
             const [pageCount, setPageCount] = useState(0);
@@ -229,14 +208,19 @@
 
             const [userData, setUserData] = useState(() => {
                 const saved = localStorage.getItem('gestaomaster_userdata');
-                return saved ? JSON.parse(saved) : { name: 'Proprietário Master', email: 'contato@gestaomaster.pt', phone: '', document: '' };
+                return saved ? JSON.parse(saved) : { 
+                    name: 'Proprietário Master', 
+                    email: 'contato@gestaomaster.pt', 
+                    phone: '', 
+                    document: '',
+                    repasse_day: '10' // Dia padrão de repasse
+                };
             });
 
             const [properties, setProperties] = useState([]);
             const [tenants, setTenants] = useState([]);
             const [contracts, setContracts] = useState([]);
             const [financial, setFinancial] = useState([]);
-            
             const [loading, setLoading] = useState(true);
 
             const [activeTab, setActiveTab] = useState('dashboard');
@@ -246,102 +230,37 @@
             const [editingItem, setEditingItem] = useState(null);
             
             const [propertyForm, setPropertyForm] = useState({ 
-                nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', 
-                description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', 
-                legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false 
+                nickname: '', address: '', registration_number: '', type: 'Casa', status: 'Vago', base_rent: '', management_fee: '10',
+                doc_registration: false, doc_deed: false, doc_iptu: false,
+                monthly_condo_cost: '', monthly_iptu_cost: '', monthly_maintenance_avg: '',
+                vacant_since: '' // Data de desocupação
             });
             const [tenantForm, setTenantForm] = useState({ name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false, propertyId: '' });
-            const [contractForm, setContractForm] = useState({ propertyId: '', tenantId: '', start_date: '', end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '', fileData: '' });
-            const [financeForm, setFinanceForm] = useState({ type: 'Receita', category: 'Aluguer', description: '', value: '', date: '', status: 'Pendente', propertyId: '' });
+            const [contractForm, setContractForm] = useState({ 
+                propertyId: '', tenantId: '', start_date: '', end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', management_fee: '10', fileName: '', fileData: '',
+                inspection_entry_name: '', inspection_entry_data: '', inspection_exit_name: '', inspection_exit_data: ''
+            });
+            const [financeForm, setFinanceForm] = useState({ type: 'Receita', category: 'Aluguel', description: '', value: '', date: '', status: 'Pendente', propertyId: '' });
             const [configPasswordForm, setConfigPasswordForm] = useState({ current: '', newPass: '', confirm: '' });
 
             const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
             const showToast = (msg, type = 'info') => { setToast({ show: true, message: msg, type }); setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3000); };
 
-            // --- MÁSCARAS E UTILITÁRIOS ---
-            const maskCPF = (value) => {
-                return value
-                    .replace(/\D/g, '') 
-                    .replace(/(\d{3})(\d)/, '$1.$2')
-                    .replace(/(\d{3})(\d)/, '$1.$2')
-                    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-                    .replace(/(-\d{2})\d+?$/, '$1');
-            };
+            const maskCPF = (value) => value.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1');
+            const maskPhone = (value) => value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
 
-            const maskPhone = (value) => {
-                return value
-                    .replace(/\D/g, "")
-                    .replace(/^(\d{2})(\d)/g, "($1) $2")
-                    .replace(/(\d)(\d{4})$/, "$1-$2");
-            };
-
-            const EmptyState = ({ message }) => (
-                <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in opacity-50">
-                    <div className="bg-slate-100 p-6 rounded-full mb-4">
-                        <Icon name="magnifying-glass" size={48} className="text-slate-400" weight="duotone"/>
-                    </div>
-                    <h3 className="text-lg font-extrabold text-slate-600 mb-1">Nenhum registo encontrado</h3>
-                    <p className="text-xs font-bold text-slate-400 max-w-xs mx-auto">{message || "Tente ajustar os filtros ou adicionar um novo registo."}</p>
-                </div>
-            );
-
-            // Resetar busca ao trocar de aba
-            useEffect(() => {
-                setSearchTerm('');
-            }, [activeTab]);
-
-            // Função para converter Base64 em Blob
-            const dataURItoBlob = (dataURI) => {
-                try {
-                    const byteString = atob(dataURI.split(',')[1]);
-                    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-                    const ab = new ArrayBuffer(byteString.length);
-                    const ia = new Uint8Array(ab);
-                    for (let i = 0; i < byteString.length; i++) {
-                        ia[i] = byteString.charCodeAt(i);
-                    }
-                    return new Blob([ab], {type: mimeString});
-                } catch (e) {
-                    console.error("Erro ao converter arquivo", e);
-                    return null;
-                }
-            };
-
-            // CARREGAR DADOS DO FIRESTORE
             useEffect(() => {
                 if (appState === 'authenticated') {
-                    setLoading(true);
-                    setSyncStatus('syncing');
-
+                    setLoading(true); setSyncStatus('syncing');
                     const loadCollection = async (collectionName, setter) => {
                         try {
                             const snapshot = await db.collection(collectionName).get();
-                            const data = snapshot.docs.map(doc => {
-                                const rawData = doc.data();
-                                return { id: doc.id, ...rawData };
-                            });
-                            setter(data);
-                        } catch (error) {
-                            console.error(`Erro ao carregar ${collectionName}:`, error);
-                            showToast(`Erro na nuvem: ${collectionName}`, 'error');
-                            setSyncStatus('error');
-                        }
+                            setter(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                        } catch (error) { showToast(`Erro na nuvem: ${collectionName}`, 'error'); setSyncStatus('error'); }
                     };
-
-                    Promise.all([
-                        loadCollection('properties', setProperties),
-                        loadCollection('tenants', setTenants),
-                        loadCollection('contracts', setContracts),
-                        loadCollection('financial', setFinancial)
-                    ]).then(() => {
-                        setLoading(false);
-                        setSyncStatus('success');
-                        setTimeout(() => setSyncStatus('idle'), 3000);
-                    }).catch(err => {
-                        console.error("Erro geral na sincronização", err);
-                        setLoading(false);
-                        setSyncStatus('error');
-                    });
+                    Promise.all([loadCollection('properties', setProperties), loadCollection('tenants', setTenants), loadCollection('contracts', setContracts), loadCollection('financial', setFinancial)])
+                    .then(() => { setLoading(false); setSyncStatus('success'); setTimeout(() => setSyncStatus('idle'), 3000); })
+                    .catch(() => { setLoading(false); setSyncStatus('error'); });
                 }
             }, [appState]);
 
@@ -352,73 +271,151 @@
                 }
             }, [userData, credentials, loading, appState]);
 
-            // LISTAS FILTRADAS (MEMOIZED)
-            const filteredProperties = useMemo(() => {
-                return properties.filter(p => 
-                    p.nickname.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                    p.address.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-            }, [properties, searchTerm]);
+            const filteredProperties = useMemo(() => properties.filter(p => p.nickname.toLowerCase().includes(searchTerm.toLowerCase()) || (p.address || '').toLowerCase().includes(searchTerm.toLowerCase())), [properties, searchTerm]);
+            const filteredTenants = useMemo(() => tenants.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) || (t.cpf || '').includes(searchTerm)), [tenants, searchTerm]);
+            const filteredContracts = useMemo(() => contracts.filter(c => {
+                const p = properties.find(i => i.id === c.propertyId);
+                const t = tenants.find(i => i.id === c.tenantId);
+                return (p?.nickname || '').toLowerCase().includes(searchTerm.toLowerCase()) || (t?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+            }), [contracts, properties, tenants, searchTerm]);
+            const filteredFinancial = useMemo(() => financial.filter(f => f.description.toLowerCase().includes(searchTerm.toLowerCase())), [financial, searchTerm]);
 
-            const filteredTenants = useMemo(() => {
-                return tenants.filter(t => 
-                    t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                    t.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    t.cpf.includes(searchTerm)
-                );
-            }, [tenants, searchTerm]);
+            const filteredSituationProperties = useMemo(() => {
+                if (situationFilter === 'pending') return properties.filter(p => !p.doc_registration || !p.doc_deed || !p.doc_iptu);
+                if (situationFilter === 'ok') return properties.filter(p => p.doc_registration && p.doc_deed && p.doc_iptu);
+                return properties;
+            }, [properties, situationFilter]);
 
-            const filteredContracts = useMemo(() => {
-                return contracts.filter(c => {
-                    const p = properties.find(i => i.id === c.propertyId);
-                    const t = tenants.find(i => i.id === c.tenantId);
-                    const term = searchTerm.toLowerCase();
-                    return (p?.nickname || '').toLowerCase().includes(term) || (t?.name || '').toLowerCase().includes(term);
+            // --- LÓGICA DE ALARMES MASTER ---
+            const activeAlarms = useMemo(() => {
+                const alarms = [];
+                const today = new Date();
+                
+                // 1. Alarme de Repasse
+                if (today.getDate() === parseInt(userData.repasse_day)) {
+                    alarms.push({ type: 'warning', icon: 'money', title: 'DIA DE REPASSE', desc: 'Hoje é o dia programado para o repasse da imobiliária. Verifique sua conta!' });
+                }
+
+                // 2. Alarme de Vacância (30 dias)
+                properties.forEach(p => {
+                    if (p.status === 'Vago' && p.vacant_since) {
+                        const vDate = new Date(p.vacant_since);
+                        const diffTime = Math.abs(today - vDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        if (diffDays >= 30) {
+                            alarms.push({ type: 'error', icon: 'house-line', title: `VACÂNCIA CRÍTICA: ${p.nickname}`, desc: `Imóvel ocioso há ${diffDays} dias. Custo fixo acumulando.` });
+                        }
+                    }
                 });
-            }, [contracts, properties, tenants, searchTerm]);
 
-            const filteredFinancial = useMemo(() => {
-                return financial.filter(f => 
-                    f.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    f.category.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-            }, [financial, searchTerm]);
+                // 3. Alarme de Contrato Ausente (Propriedade Alugada mas sem arquivo)
+                properties.forEach(p => {
+                    if (p.status === 'Alugado') {
+                        const hasContractFile = contracts.some(c => c.propertyId === p.id && c.fileData);
+                        if (!hasContractFile) {
+                            alarms.push({ type: 'warning', icon: 'file-x', title: `CONTRATO NÃO RECEBIDO: ${p.nickname}`, desc: `Imóvel marcado como alugado, mas a imobiliária não enviou o arquivo PDF.` });
+                        }
+                    }
+                });
 
-            // DADOS PARA GRÁFICOS (MEMOIZED)
-            const chartFinancialData = useMemo(() => {
-                const income = financial.filter(f => f.type === 'Receita' && f.status === 'Pago').reduce((acc, curr) => acc + curr.value, 0);
-                const expense = financial.filter(f => f.type === 'Despesa' && f.status === 'Pago').reduce((acc, curr) => acc + curr.value, 0);
-                return {
-                    labels: ['Receitas', 'Despesas'],
-                    datasets: [{
-                        label: 'R$',
-                        data: [income, expense],
-                        backgroundColor: ['#d97706', '#ef4444'],
-                        borderRadius: 6,
-                        barThickness: 40
-                    }]
+                // 4. Alarme de Vencimento de Contrato (Próximos 60 dias)
+                contracts.forEach(c => {
+                    if (c.status === 'Ativo' && c.end_date) {
+                        const eDate = new Date(c.end_date);
+                        const diffTime = eDate - today;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        if (diffDays > 0 && diffDays <= 60) {
+                            const p = properties.find(i => i.id === c.propertyId);
+                            alarms.push({ type: 'info', icon: 'clock-afternoon', title: `VENCIMENTO PRÓXIMO: ${p?.nickname}`, desc: `O contrato vence em ${diffDays} dias. Inicie a renovação.` });
+                        }
+                    }
+                });
+
+                return alarms;
+            }, [properties, contracts, userData.repasse_day]);
+
+            const stats = useMemo(() => {
+                const totalIncome = financial.filter(f => f.type === 'Receita' && f.status === 'Pago').reduce((a, b) => a + (b.value || 0), 0);
+                const totalExpense = financial.filter(f => f.type === 'Despesa' && f.status === 'Pago').reduce((a, b) => a + (b.value || 0), 0);
+                const activeContracts = contracts.filter(c => c.status === 'Ativo');
+                const grossRent = activeContracts.reduce((a, b) => a + (b.rent_value || 0), 0);
+                const totalFees = activeContracts.reduce((a, b) => a + ((b.rent_value || 0) * ((b.management_fee || 0) / 100)), 0);
+                const propertiesOk = properties.filter(p => p.doc_registration && p.doc_deed && p.doc_iptu).length;
+                
+                const vacantProperties = properties.filter(p => p.status === 'Vago');
+                const vacancyLoss = vacantProperties.reduce((acc, p) => acc + (Number(p.monthly_condo_cost) || 0) + (Number(p.monthly_iptu_cost) || 0) + (Number(p.monthly_maintenance_avg) || 0), 0);
+                const opportunityCost = vacantProperties.reduce((acc, p) => acc + (Number(p.base_rent) || 0), 0);
+
+                return { 
+                    totalIncome, totalExpense, occupied: properties.filter(p => p.status === 'Alugado').length, 
+                    activeValue: grossRent, totalFees, netTransferExpected: grossRent - totalFees, 
+                    pendingDocs: properties.length - propertiesOk, totalProperties: properties.length, okDocs: propertiesOk,
+                    vacancyLoss, opportunityCost
                 };
-            }, [financial]);
+            }, [financial, properties, contracts]);
 
-            const chartOccupancyData = useMemo(() => {
-                const occupied = properties.filter(p => p.status === 'Alugado').length;
-                const vacant = properties.filter(p => p.status === 'Vago').length;
-                const other = properties.length - occupied - vacant;
-                return {
-                    labels: ['Alugado', 'Vago', 'Outros'],
-                    datasets: [{
-                        data: [occupied, vacant, other],
-                        backgroundColor: ['#000000', '#d97706', '#94a3b8'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                };
-            }, [properties]);
-
+            const chartFinancialData = useMemo(() => ({ labels: ['Receitas', 'Despesas'], datasets: [{ label: 'R$', data: [stats.totalIncome, stats.totalExpense], backgroundColor: ['#d97706', '#ef4444'], borderRadius: 6, barThickness: 40 }] }), [stats]);
+            const chartOccupancyData = useMemo(() => ({ labels: ['Alugado', 'Vago', 'Outros'], datasets: [{ data: [stats.occupied, stats.totalProperties - stats.occupied, 0], backgroundColor: ['#002147', '#d97706', '#94a3b8'], borderWidth: 0, hoverOffset: 4 }] }), [stats]);
+            const chartVacancyData = useMemo(() => ({ labels: ['Custo Operacional (IPTU/Cond)', 'Aluguel Não Recebido'], datasets: [{ data: [stats.vacancyLoss, stats.opportunityCost], backgroundColor: ['#ef4444', '#f59e0b'], borderWidth: 0, hoverOffset: 4 }] }), [stats]);
 
             const handleLogin = (u, p) => {
                 if (u === credentials.user && p === credentials.pass) setAppState('authenticated');
                 else showToast('Dados de acesso incorretos', 'error');
+            };
+
+            const saveToCloud = async (collectionName, itemData, setter, currentList, isEdit) => {
+                setSyncStatus('syncing'); const docId = String(itemData.id);
+                try {
+                    await db.collection(collectionName).doc(docId).set(itemData);
+                    setter(isEdit ? currentList.map(i => String(i.id) === docId ? itemData : i) : [...currentList, itemData]);
+                    setSyncStatus('success'); showToast('Salvo com Sucesso!', 'success'); setIsModalOpen(false);
+                } catch (error) { showToast('Erro ao salvar.', 'error'); setSyncStatus('error'); }
+            };
+
+            const deleteFromCloud = async (collectionName, id, setter, currentList) => {
+                if(!confirm('Deseja eliminar este registro permanentemente?')) return;
+                setSyncStatus('syncing');
+                try { await db.collection(collectionName).doc(String(id)).delete(); setter(currentList.filter(i => String(i.id) !== String(id))); setSyncStatus('success'); showToast('Removido.', 'success'); }
+                catch (error) { setSyncStatus('error'); }
+            };
+
+            const generateReportDOC = (type) => {
+                let title = ""; let tableHeader = ""; let tableRows = "";
+                if (type === 'report_finance') {
+                    title = "Fluxo Financeiro Realizado";
+                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th></tr>`;
+                    tableRows = financial.map(f => `<tr><td>${new Date(f.date).toLocaleDateString()}</td><td>${f.description}</td><td>${formatCurrency(f.value)}</td><td>${f.status}</td></tr>`).join('');
+                } else if (type === 'report_performance') {
+                    title = "Performance de Repasse e Ativos";
+                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Ativo</th><th>Matrícula</th><th>Aluguel Bruto</th><th>Taxa Adm (%)</th><th>Repasse Líquido</th></tr>`;
+                    tableRows = contracts.filter(c=>c.status==='Ativo').map(c => {
+                        const p = properties.find(i=>i.id==c.propertyId);
+                        const fee = (c.rent_value || 0) * ((c.management_fee || 0)/100);
+                        return `<tr><td>${p?.nickname || '-'}</td><td>${p?.registration_number || '-'}</td><td>${formatCurrency(c.rent_value)}</td><td>${c.management_fee}%</td><td>${formatCurrency(c.rent_value - fee)}</td></tr>`;
+                    }).join('');
+                } else if (type === 'report_docs') {
+                    title = "Auditoria de Documentação Patrimonial";
+                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Imóvel</th><th>Matrícula</th><th>Matrícula OK</th><th>Escritura OK</th><th>IPTU OK</th></tr>`;
+                    tableRows = properties.map(p => `<tr><td>${p.nickname}</td><td>${p.registration_number || '-'}</td><td>${p.doc_registration?'SIM':'NÃO'}</td><td>${p.doc_deed?'SIM':'NÃO'}</td><td>${p.doc_iptu?'SIM':'NÃO'}</td></tr>`).join('');
+                } else {
+                    title = "Listagem de Locatários";
+                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Nome</th><th>CPF/NIF</th><th>Telefone</th><th>Status</th></tr>`;
+                    tableRows = tenants.map(t => `<tr><td>${t.name}</td><td>${t.cpf}</td><td>${t.phone}</td><td>${t.status}</td></tr>`).join('');
+                }
+                const content = `<html><head><meta charset='utf-8'><title>${title}</title><style>body { font-family: 'Calibri', sans-serif; } h1 { color: #002147; text-align: center; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { border: 1px solid #000; padding: 8px; text-align: left; } th { background-color: #f3f4f6; }</style></head><body><h1>GESTÃO MASTER - ${title}</h1><p>Emitido em: ${new Date().toLocaleString()}</p><table><thead>${tableHeader}</thead><tbody>${tableRows}</tbody></table></body></html>`;
+                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([content], { type: 'application/msword' })); link.download = `Relatorio_Master_${type}.doc`; link.click();
+                showToast('Relatório gerado!', 'success');
+            };
+
+            const openModal = (type, item = null) => {
+                setModalType(type); setEditingItem(item);
+                const today = new Date().toISOString().split('T')[0];
+                setPageNum(1); setPdfScale(1.5); 
+                if (type === 'property') setPropertyForm(item || { nickname: '', address: '', registration_number: '', type: 'Casa', status: 'Vago', base_rent: '', management_fee: '10', doc_registration: false, doc_deed: false, doc_iptu: false, monthly_condo_cost: '', monthly_iptu_cost: '', monthly_maintenance_avg: '', vacant_since: '' });
+                else if (type === 'tenant') setTenantForm(item || { name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false, propertyId: '' });
+                else if (type === 'contract') setContractForm(item || { propertyId: '', tenantId: '', start_date: today, end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', management_fee: '10', fileName: '', fileData: '', inspection_entry_name: '', inspection_entry_data: '', inspection_exit_name: '', inspection_exit_data: '' });
+                else if (type === 'finance') setFinanceForm(item || { type: 'Receita', category: 'Aluguel', description: '', value: '', date: today, status: 'Pendente', propertyId: '' });
+                setIsModalOpen(true);
             };
 
             const handleSaveConfig = (e) => {
@@ -428,344 +425,48 @@
 
             const handleChangePassword = (e) => {
                 e.preventDefault();
+                if (configPasswordForm.newPass !== configPasswordForm.confirm) {
+                    showToast('As senhas não coincidem!', 'error');
+                    return;
+                }
                 setCredentials({ ...credentials, pass: configPasswordForm.newPass });
                 setConfigPasswordForm({ current: '', newPass: '', confirm: '' });
                 showToast('Senha master atualizada!', 'success');
-            };
-
-            const saveToCloud = async (collectionName, itemData, setter, currentList, isEdit) => {
-                setSyncStatus('syncing');
-                const docId = String(itemData.id);
-                try {
-                    await db.collection(collectionName).doc(docId).set(itemData);
-                    setter(isEdit ? currentList.map(i => String(i.id) === docId ? itemData : i) : [...currentList, itemData]);
-                    setSyncStatus('success');
-                    showToast('Salvo na Nuvem com Sucesso!', 'success');
-                    setIsModalOpen(false);
-                } catch (error) {
-                    console.error("Erro ao salvar na nuvem:", error);
-                    showToast('Erro ao salvar na nuvem.', 'error');
-                    setSyncStatus('error');
-                }
-            };
-
-            const deleteFromCloud = async (collectionName, id, setter, currentList) => {
-                if(!confirm('Confirmar eliminação permanente da Nuvem?')) return;
-                setSyncStatus('syncing');
-                const docId = String(id);
-                try {
-                    await db.collection(collectionName).doc(docId).delete();
-                    setter(currentList.filter(i => String(i.id) !== docId));
-                    setSyncStatus('success');
-                    showToast('Removido da Nuvem.', 'success');
-                } catch (error) {
-                    console.error("Erro ao deletar:", error);
-                    showToast('Erro ao deletar na nuvem.', 'error');
-                    setSyncStatus('error');
-                }
-            };
-
-            const deleteItem = (id, list, setList, collectionName) => {
-                deleteFromCloud(collectionName, id, setList, list);
-            };
-
-            // RENDERIZAÇÃO DO PDF
-            const renderPage = async (pdf, num, scale) => {
-                try {
-                    const page = await pdf.getPage(num);
-                    const viewport = page.getViewport({ scale });
-                    const canvas = document.getElementById('pdf-canvas');
-                    if (!canvas) return;
-                    
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-                    await page.render(renderContext).promise;
-                } catch (err) {
-                    console.error("Erro ao renderizar página", err);
-                }
-            };
-
-            useEffect(() => {
-                if (modalType === 'contract_view' && editingItem?.fileData && editingItem.fileData.includes('pdf')) {
-                    const loadingTask = pdfjsLib.getDocument(editingItem.fileData);
-                    loadingTask.promise.then(pdf => {
-                        setPdfDoc(pdf);
-                        setPageCount(pdf.numPages);
-                    }, reason => {
-                        console.error("Erro ao carregar PDF:", reason);
-                        showToast("Erro ao carregar documento PDF.", "error");
-                    });
-                }
-            }, [modalType, editingItem]);
-
-            useEffect(() => {
-                if (pdfDoc) {
-                    renderPage(pdfDoc, pageNum, pdfScale);
-                }
-            }, [pdfDoc, pageNum, pdfScale]);
-
-            const changePage = (offset) => {
-                const newPage = pageNum + offset;
-                if (newPage >= 1 && newPage <= pageCount) {
-                    setPageNum(newPage);
-                }
-            };
-
-            const changeZoom = (delta) => {
-                setPdfScale(prev => Math.max(0.5, prev + delta));
-            };
-
-            const openModal = (type, item = null) => {
-                setModalType(type);
-                setEditingItem(item);
-                const today = new Date().toISOString().split('T')[0];
-                setPageNum(1); 
-                setPdfScale(1.5); 
-
-                if (type === 'contract_view' && item && item.fileData) {
-                    if (!item.fileData.includes('pdf')) {
-                        setPreviewUrl(item.fileData);
-                    }
-                }
-
-                if (type === 'property') setPropertyForm(item || { nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false });
-                else if (type === 'tenant') setTenantForm(item || { name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false, propertyId: '' });
-                else if (type === 'contract') setContractForm(item || { propertyId: '', tenantId: '', start_date: today, end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '', fileData: '' });
-                else if (type === 'finance') setFinanceForm(item || { type: 'Receita', category: 'Aluguer', description: '', value: '', date: today, status: 'Pendente', propertyId: '' });
-                
-                setIsModalOpen(true);
-            };
-
-            const closeModal = () => {
-                setIsModalOpen(false);
-                setPreviewUrl(null);
-                setPdfDoc(null);
-            };
-
-            const handleFileUpload = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                if (file.type !== "application/pdf") {
-                    alert("Formato inválido. Por favor, envie apenas arquivos PDF.");
-                    e.target.value = ""; 
-                    return;
-                }
-
-                if (file.size > 800 * 1024) { 
-                    alert("O arquivo é muito grande para o modo demonstração (Máx 800KB).");
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setContractForm({ ...contractForm, fileName: file.name, fileData: reader.result });
-                };
-                reader.readAsDataURL(file);
-            };
-
-            const downloadContract = (contract) => {
-                if (contract.fileData) {
-                    const link = document.createElement("a");
-                    link.href = contract.fileData;
-                    link.download = contract.fileName || "contrato.pdf";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showToast("Download iniciado!", "success");
-                } else {
-                    showToast("Nenhum arquivo digitalizado encontrado.", "error");
-                }
-            };
-
-            // Função de Impressão Robusta
-            const handlePrintReceipt = (item) => {
-                const iframe = document.createElement('iframe');
-                iframe.style.position = 'fixed';
-                iframe.style.right = '0';
-                iframe.style.bottom = '0';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.style.border = '0';
-                document.body.appendChild(iframe);
-
-                const doc = iframe.contentWindow.document;
-                
-                const content = `
-                    <html>
-                    <head>
-                        <title>Recibo - Gestão Master</title>
-                        <style>
-                            body { font-family: 'Times New Roman', serif; padding: 40px; color: #000; }
-                            .recibo-box { border: 2px dashed #000; padding: 40px; width: 100%; box-sizing: border-box; }
-                            .header { text-align: center; margin-bottom: 40px; }
-                            .title { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; }
-                            .subtitle { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #555; margin-top: 5px; }
-                            .content { font-size: 18px; line-height: 1.6; }
-                            .value { background: #f3f4f6; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
-                            .description { text-transform: uppercase; font-weight: bold; }
-                            .footer { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #000; padding-top: 30px; }
-                            .signature { text-align: right; }
-                            .line { margin-bottom: 5px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="recibo-box">
-                            <div class="header">
-                                <h1 class="title">Recibo de Pagamento</h1>
-                                <p class="subtitle">Gestão Master Imobiliária</p>
-                            </div>
-                            
-                            <div class="content">
-                                <p>Recebemos a quantia de <span class="value">${formatCurrency(item.value)}</span></p>
-                                <p><strong>Referente a:</strong> <span class="description">${item.description}</span></p>
-                                <br>
-                                <p>Declaramos para os devidos fins que o valor acima foi liquidado.</p>
-                            </div>
-
-                            <div class="footer">
-                                <div>
-                                    <p><strong>Data de Emissão:</strong></p>
-                                    <p>${new Date().toLocaleDateString('pt-BR')}</p>
-                                </div>
-                                <div class="signature">
-                                    <p class="line">__________________________________________</p>
-                                    <p><strong>ASSINATURA DO RESPONSÁVEL</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                        <script>
-                            window.onload = function() { window.print(); }
-                        ` + '<' + '/script>' + `
-                    </body>
-                    </html>
-                `;
-
-                doc.open();
-                doc.write(content);
-                doc.close();
-
-                setTimeout(() => {
-                    document.body.removeChild(iframe);
-                }, 1000);
             };
 
             const saveItem = (e) => {
                 e.preventDefault();
                 const id = editingItem ? editingItem.id : Date.now();
                 const isEdit = !!editingItem;
-
-                if (modalType === 'property') {
-                    const oldProp = properties.find(p => p.id === id);
-                    let vacatedAt = propertyForm.vacated_at || null;
-                    
-                    if (propertyForm.status === 'Vago' && (!oldProp || oldProp.status !== 'Vago')) {
-                        vacatedAt = new Date().toISOString();
-                    } else if (propertyForm.status !== 'Vago') {
-                        vacatedAt = null;
-                    }
-
-                    const newItem = { ...propertyForm, id, base_rent: parseFloat(propertyForm.base_rent), vacated_at: vacatedAt };
-                    saveToCloud('properties', newItem, setProperties, properties, isEdit);
-                } else if (modalType === 'tenant') {
-                    const newItem = { ...tenantForm, id };
-                    saveToCloud('tenants', newItem, setTenants, tenants, isEdit);
-                } else if (modalType === 'contract') {
-                    const newItem = { ...contractForm, id, rent_value: parseFloat(contractForm.rent_value), deposit_value: parseFloat(contractForm.deposit_value), propertyId: parseInt(contractForm.propertyId), tenantId: parseInt(contractForm.tenantId) };
-                    saveToCloud('contracts', newItem, setContracts, contracts, isEdit);
-                    
-                    if (newItem.status === 'Ativo' && newItem.propertyId) {
-                        const propToUpdate = properties.find(p => p.id === newItem.propertyId);
-                        if (propToUpdate && propToUpdate.status !== 'Alugado') {
-                            const updatedProp = { ...propToUpdate, status: 'Alugado' };
-                            db.collection('properties').doc(String(updatedProp.id)).set(updatedProp)
-                                .then(() => {
-                                    setProperties(prevProps => prevProps.map(p => p.id === updatedProp.id ? updatedProp : p));
-                                    showToast('Status do imóvel atualizado para Alugado!', 'info');
-                                });
-                        }
-                    }
-
-                } else if (modalType === 'finance') {
-                    const newItem = { ...financeForm, id, value: parseFloat(financeForm.value), propertyId: parseInt(financeForm.propertyId) };
-                    saveToCloud('financial', newItem, setFinancial, financial, isEdit);
-                }
+                if (modalType === 'property') saveToCloud('properties', { ...propertyForm, id, base_rent: parseFloat(propertyForm.base_rent), management_fee: parseFloat(propertyForm.management_fee) }, setProperties, properties, isEdit);
+                else if (modalType === 'tenant') saveToCloud('tenants', { ...tenantForm, id }, setTenants, tenants, isEdit);
+                else if (modalType === 'contract') saveToCloud('contracts', { ...contractForm, id, rent_value: parseFloat(contractForm.rent_value), management_fee: parseFloat(contractForm.management_fee), propertyId: parseInt(contractForm.propertyId), tenantId: parseInt(contractForm.tenantId) }, setContracts, contracts, isEdit);
+                else if (modalType === 'finance') saveToCloud('financial', { ...financeForm, id, value: parseFloat(financeForm.value), propertyId: parseInt(financeForm.propertyId) }, setFinancial, financial, isEdit);
             };
 
-            const generateReportDOC = (type) => {
-                let title = "";
-                let tableHeader = "";
-                let tableRows = "";
-
-                if (type === 'report_finance') {
-                    title = "Fluxo Financeiro";
-                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Valor</th><th>Status</th></tr>`;
-                    tableRows = financial.map(f => `<tr><td>${new Date(f.date).toLocaleDateString()}</td><td>${f.type}</td><td>${f.category}</td><td>${f.description}</td><td>${formatCurrency(f.value)}</td><td>${f.status}</td></tr>`).join('');
-                } else if (type === 'report_occupancy') {
-                    title = "Relatório de Ocupação";
-                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Imóvel</th><th>Endereço</th><th>Status</th><th>Valor Base</th></tr>`;
-                    tableRows = properties.map(p => `<tr><td>${p.nickname}</td><td>${p.address}</td><td>${p.status}</td><td>${formatCurrency(p.base_rent)}</td></tr>`).join('');
-                } else if (type === 'report_tenants') {
-                    title = "Relatório de Inquilinos";
-                    tableHeader = `<tr style="background-color:#f3f4f6;"><th>Nome</th><th>CPF</th><th>Email</th><th>Telefone</th><th>Status</th></tr>`;
-                    tableRows = tenants.map(t => `<tr><td>${t.name}</td><td>${t.cpf}</td><td>${t.email}</td><td>${t.phone}</td><td>${t.status}</td></tr>`).join('');
-                }
-
-                const content = `
-                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                    <head>
-                        <meta charset='utf-8'>
-                        <title>${title}</title>
-                        <style>
-                            body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; }
-                            h1 { color: #d97706; text-align: center; font-size: 18pt; margin-bottom: 20px; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-                            th { font-weight: bold; background-color: #f3f4f6; }
-                            .footer { margin-top: 30px; font-size: 9pt; color: #666; text-align: right; border-top: 1px solid #ccc; padding-top: 10px; }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>GESTÃO MASTER - ${title}</h1>
-                        <p><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}</p>
-                        <br>
-                        <table>
-                            <thead>${tableHeader}</thead>
-                            <tbody>${tableRows}</tbody>
-                        </table>
-                        <div class="footer">Documento gerado automaticamente pelo sistema Gestão Master.</div>
-                    </body>
-                    </html>
-                `;
-
-                const blob = new Blob([content], { type: 'application/msword' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = `Relatorio_Master_${type}.doc`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showToast('Relatório DOC gerado com sucesso!', 'success');
+            const renderPage = async (pdf, num, scale) => {
+                try {
+                    const page = await pdf.getPage(num);
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.getElementById('pdf-canvas');
+                    if (!canvas) return;
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    await page.render({ canvasContext: context, viewport }).promise;
+                } catch (err) {}
             };
 
-            const stats = useMemo(() => {
-                const totalIncome = financial.filter(f => f.type === 'Receita' && f.status === 'Pago').reduce((a, b) => a + (b.value || 0), 0);
-                const totalExpense = financial.filter(f => f.type === 'Despesa' && f.status === 'Pago').reduce((a, b) => a + (b.value || 0), 0);
-                const occupied = properties.filter(p => p.status === 'Alugado').length;
-                const activeValue = contracts.filter(c => c.status === 'Ativo').reduce((a,b) => a + (b.rent_value || 0), 0);
-                const riskLegal = properties.filter(p => ['Judicial', 'Penhora', 'Dívida Ativa'].includes(p.legal_status)).length;
-                const pendingDocs = properties.filter(p => !p.doc_registration || !p.doc_deed || !p.doc_iptu).length;
-                return { totalIncome, totalExpense, balance: totalIncome - totalExpense, occupied, activeValue, riskLegal, pendingDocs, totalProperties: properties.length };
-            }, [financial, properties, contracts]);
+            useEffect(() => {
+                if (modalType === 'contract_view' && editingItem?.fileData?.includes('pdf')) {
+                    pdfjsLib.getDocument(editingItem.fileData).promise.then(pdf => {
+                        setPdfDoc(pdf);
+                        setPageCount(pdf.numPages);
+                    });
+                }
+            }, [modalType, editingItem]);
 
-            if (appState === 'login') return <LoginScreen onLogin={handleLogin} />;
+            useEffect(() => { if (pdfDoc) renderPage(pdfDoc, pageNum, pdfScale); }, [pdfDoc, pageNum, pdfScale]);
 
             const menuItems = [
                 { id: 'dashboard', label: 'Visão Geral', icon: 'chart-pie-slice' },
@@ -773,729 +474,473 @@
                 { id: 'tenants', label: 'Inquilinos', icon: 'users' },
                 { id: 'contracts', label: 'Contratos', icon: 'file-text' },
                 { id: 'finance', label: 'Financeiro', icon: 'currency-dollar' },
-                { id: 'reports', label: 'Relatórios', icon: 'scroll' }, 
+                { id: 'reports', label: 'Relatórios', icon: 'scroll' },
                 { id: 'situation', label: 'Situação Legal', icon: 'gavel' },
                 { id: 'config', label: 'Configurações', icon: 'gear' }, 
             ];
 
+            if (appState === 'login') return <LoginScreen onLogin={handleLogin} />;
+
             return (
-                <div className="flex h-screen overflow-hidden bg-pattern-houses text-slate-700 font-bold text-sm">
+                <div className="flex h-screen overflow-hidden bg-pattern-houses text-slate-700 font-bold text-sm text-left">
                     <Toast {...toast} onClose={() => setToast({...toast, show: false})} />
                     
-                    <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-black text-white flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl border-r border-amber-500/20`}>
-                        <div className="p-6 border-b border-amber-500/10 text-left">
-                            <BrandLogo />
-                        </div>
+                    <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-[#002147] text-white flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl border-r border-amber-500/20`}>
+                        <div className="p-6 border-b border-amber-500/10"><BrandLogo /></div>
                         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
                             {menuItems.map(item => (
                                 <button key={item.id} onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-bold text-sm ${activeTab === item.id ? 'bg-amber-500 text-black shadow-lg translate-x-1' : 'hover:bg-amber-600/10 hover:text-amber-500 hover:translate-x-1 text-white/90'}`}>
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-bold text-sm ${activeTab === item.id ? 'bg-amber-500 text-[#002147] shadow-lg translate-x-1' : 'hover:bg-amber-600/10 hover:text-amber-500 hover:translate-x-1 text-white/90'}`}>
                                     <Icon name={item.icon} size={20} weight={activeTab === item.id ? 'fill' : 'bold'} />
                                     {item.label}
                                 </button>
                             ))}
                         </nav>
-                        <div className="p-6 bg-slate-900 backdrop-blur-sm">
-                            <div className="flex items-center gap-3 text-left">
-                                <div className="w-9 h-9 bg-amber-500 rounded-full flex items-center justify-center font-bold text-black text-xs shadow-md border-2 border-amber-600 uppercase">
-                                    {userData.name.charAt(0)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold text-white truncate text-left">{userData.name}</p>
-                                    <p className="text-[10px] text-amber-500 uppercase tracking-wide truncate text-left">Admin Master</p>
-                                </div>
+                        <div className="p-6 bg-[#001a38]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 bg-amber-500 rounded-full flex items-center justify-center font-bold text-[#002147] text-xs border-2 border-amber-600 uppercase">{userData.name.charAt(0)}</div>
+                                <div className="flex-1 min-w-0"><p className="text-xs font-bold text-white truncate">{userData.name}</p><p className="text-[10px] text-amber-500 uppercase tracking-wide truncate">Proprietário Master</p></div>
                             </div>
                         </div>
                     </aside>
 
                     <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shadow-sm z-10 sticky top-0">
-                            <div className="flex items-center gap-4 text-left">
-                                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-black p-2 hover:bg-slate-100 rounded-lg"><Icon name="list" size={24} /></button>
-                                <div className="text-left">
-                                    <h2 className="text-xl font-extrabold text-slate-800 tracking-tight uppercase tracking-tighter text-left">{menuItems.find(i => i.id === activeTab)?.label}</h2>
-                                    <p className="text-[10px] text-slate-400 font-bold text-left uppercase tracking-wide">{new Date().toLocaleDateString('pt-BR', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
-                                </div>
+                        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shadow-sm z-10 shrink-0">
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-[#002147] p-2 hover:bg-slate-100 rounded-lg"><Icon name="list" size={24} /></button>
+                                <div><h2 className="text-xl font-extrabold text-slate-800 tracking-tight uppercase">{menuItems.find(i => i.id === activeTab)?.label}</h2></div>
                             </div>
                             <div className="flex items-center gap-3">
-                                {/* INDICADOR DE NUVEM (DOURADO) */}
-                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    syncStatus === 'syncing' ? 'bg-amber-100 text-amber-700' : 
-                                    (syncStatus === 'error' ? 'bg-red-100 text-red-700' : 'bg-black text-amber-500')
-                                }`}>
-                                    {syncStatus === 'syncing' && <Icon name="spinner" className="animate-spin" weight="bold"/>}
-                                    {syncStatus === 'success' && <Icon name="cloud-check" weight="fill"/>}
-                                    {syncStatus === 'error' && <Icon name="cloud-slash" weight="fill"/>}
-                                    {syncStatus === 'idle' && <Icon name="cloud" weight="bold"/>}
-                                    <span className="hidden md:inline">
-                                        {syncStatus === 'syncing' ? 'Sincronizando...' : 
-                                        (syncStatus === 'error' ? 'Erro Nuvem' : 'Nuvem OK')}
-                                    </span>
+                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${syncStatus === 'syncing' ? 'bg-amber-100 text-amber-700' : 'bg-[#002147] text-amber-500'}`}>
+                                    {syncStatus === 'syncing' ? <Icon name="spinner" className="animate-spin"/> : <Icon name="cloud-check" weight="fill"/>}
+                                    <span className="hidden md:inline">{syncStatus === 'syncing' ? 'Sincronizando...' : 'Nuvem Master OK'}</span>
                                 </div>
-
-                                <span className="text-xs text-slate-500 font-bold hidden md:block">Bem-vindo, {userData.name.split(' ')[0]}</span>
-                                <button onClick={() => setAppState('login')} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:text-red-500 transition-colors shadow-sm border"><Icon name="sign-out" size={18} weight="bold"/></button>
+                                <button onClick={() => setAppState('login')} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:text-red-500 transition-colors"><Icon name="sign-out" size={18} weight="bold"/></button>
                             </div>
                         </header>
 
                         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-                            
-                            {/* DASHBOARD (ACENTOS DOURADOS) */}
                             {activeTab === 'dashboard' && (
                                 <div className="space-y-6 animate-fade-in text-left">
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <Card className="p-5 bg-gradient-to-br from-black to-slate-800 text-white border-none card-hover">
-                                            <p className="text-[10px] text-amber-500 uppercase font-bold tracking-wider mb-2">Previsão Contratada</p>
-                                            <h3 className="text-2xl font-extrabold">{formatCurrency(stats.activeValue)}</h3>
-                                        </Card>
-                                        <Card className="p-5 bg-gradient-to-br from-amber-600 to-amber-700 text-white border-none card-hover">
-                                            <p className="text-[10px] text-amber-100 uppercase font-bold tracking-wider mb-2">Líquido do Mês</p>
-                                            <h3 className="text-2xl font-extrabold">{formatCurrency(stats.balance)}</h3>
-                                        </Card>
-                                        <Card className="p-5 bg-white border border-slate-100 card-hover">
-                                            <div className="flex justify-between items-start text-left">
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Ocupação</p>
-                                                    <h3 className="text-2xl font-extrabold text-slate-800">{stats.occupied} <span className="text-base text-slate-400">/ {properties.length}</span></h3>
-                                                </div>
-                                                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><Icon name="house-line" weight="fill" size={20}/></div>
+                                    {/* --- CENTRAL DE ALARMES MASTER (BLOCO DE DETALHES) --- */}
+                                    {activeAlarms.length > 0 && (
+                                        <div className="bg-white p-6 rounded-3xl border border-red-100 shadow-xl space-y-4 mb-6">
+                                            <div className="flex items-center justify-between border-b border-red-50 pb-4">
+                                                <h4 className="text-sm font-black uppercase tracking-widest text-red-600 flex items-center gap-2">
+                                                    <Icon name="warning-circle" weight="fill"/> Alarmes de Auditoria Master
+                                                </h4>
+                                                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-black">{activeAlarms.length} ALERTA(S)</span>
                                             </div>
+                                            <div className="space-y-3">
+                                                {activeAlarms.map((alarm, idx) => (
+                                                    <div key={idx} className={`p-4 rounded-2xl border-l-4 flex items-center gap-4 transition-all hover:translate-x-1 ${alarm.type === 'error' ? 'bg-red-50 border-red-500 text-red-700' : (alarm.type === 'warning' ? 'bg-amber-50 border-amber-500 text-amber-700' : 'bg-blue-50 border-blue-500 text-blue-700')}`}>
+                                                        <div className={`p-2 rounded-xl shrink-0 ${alarm.type === 'error' ? 'bg-red-100' : (alarm.type === 'warning' ? 'bg-amber-100' : 'bg-blue-100')}`}>
+                                                            <Icon name={alarm.icon} weight="bold" size={20}/>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-black uppercase tracking-tighter">{alarm.title}</p>
+                                                            <p className="text-[11px] font-bold opacity-80 leading-tight">{alarm.desc}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-1 rounded-3xl shadow-xl overflow-hidden mb-6">
+                                        <div className="bg-white/5 backdrop-blur-sm p-6 rounded-[1.4rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                                            <div className="text-white">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="p-1.5 bg-amber-500 rounded-lg text-[#002147]"><Icon name="trend-up" weight="bold"/></div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Performance Master de Repasse (Previsão Mensal)</p>
+                                                </div>
+                                                <h3 className="text-3xl font-black tracking-tighter">O seu Repasse Líquido: <span className="text-amber-500">{formatCurrency(stats.netTransferExpected)}</span></h3>
+                                                <p className="text-xs font-bold text-white/60 mt-1">Baseado em {contracts.filter(c=>c.status==='Ativo').length} ativos auditados.</p>
+                                            </div>
+                                            <div className="flex gap-4 w-full md:w-auto">
+                                                <div className="bg-white/10 px-4 py-3 rounded-2xl border border-white/10 flex-1 text-center">
+                                                    <p className="text-[9px] font-black uppercase text-amber-500 text-center">Renda Bruta</p>
+                                                    <p className="text-lg font-bold text-white text-center">{formatCurrency(stats.activeValue)}</p>
+                                                </div>
+                                                <div className="bg-red-500/10 px-4 py-3 rounded-2xl border border-red-500/20 flex-1 text-center">
+                                                    <p className="text-[9px] font-black uppercase text-red-400 text-center">Taxa Imobiliária</p>
+                                                    <p className="text-lg font-bold text-red-400 text-center">- {formatCurrency(stats.totalFees)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* --- GRADE DE BLOQUINHOS DE ESTATÍSTICA --- */}
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                        <Card className="p-5 bg-white border border-slate-100 card-hover text-left">
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-2">Ocupação Atual</p>
+                                            <h3 className="text-2xl font-extrabold text-slate-800 text-left">{stats.occupied} / {stats.totalProperties}</h3>
+                                        </Card>
+                                        <Card className="p-5 bg-white border border-slate-100 card-hover text-left" onClick={() => setActiveTab('situation')}>
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-2">Docs Pendentes</p>
+                                            <h3 className="text-2xl font-extrabold text-amber-600 text-left">{stats.pendingDocs}</h3>
+                                        </Card>
+                                        
+                                        {/* NOVO BLOQUINHO: ALARMES ATIVOS */}
+                                        <Card className={`p-5 bg-white border-2 card-hover text-left shadow-md ${activeAlarms.length > 0 ? 'border-red-200 bg-red-50/20' : 'border-slate-100'}`}>
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-2 flex items-center gap-2">
+                                                <Icon name="bell-ringing" weight={activeAlarms.length > 0 ? "fill" : "regular"} className={activeAlarms.length > 0 ? "text-red-500" : ""}/> Alertas Ativos
+                                            </p>
+                                            <h3 className={`text-2xl font-black text-left ${activeAlarms.length > 0 ? 'text-red-600' : 'text-slate-800'}`}>{activeAlarms.length}</h3>
+                                        </Card>
+
+                                        <Card className="p-5 bg-white border-2 border-red-100 bg-red-50/30 card-hover text-left shadow-lg">
+                                            <p className="text-[10px] text-red-500 uppercase font-extrabold tracking-wider mb-2 flex items-center gap-2">
+                                                <Icon name="trend-down" weight="bold"/> Perda por Ócio
+                                            </p>
+                                            <h3 className="text-2xl font-black text-red-600 text-left">{formatCurrency(stats.vacancyLoss + stats.opportunityCost)}</h3>
                                         </Card>
                                         <Card className="p-5 bg-white border border-slate-100 card-hover text-left">
-                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Situação Crítica</p>
-                                            <h3 className="text-2xl font-extrabold text-red-500 text-left">{stats.riskLegal}</h3>
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-2">Manutenção</p>
+                                            <h3 className="text-2xl font-extrabold text-red-500 text-left">{formatCurrency(stats.totalExpense)}</h3>
                                         </Card>
                                     </div>
-
-                                    {/* SEÇÃO DE GRÁFICOS */}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        <Card className="p-6 lg:col-span-1 card-hover bg-white border border-slate-100">
+                                            <h3 className="font-bold text-lg text-red-600 mb-6 flex items-center gap-2"><Icon name="chart-pie-slice" weight="fill" className="text-red-600"/> Prejuízo de Ociosidade</h3>
+                                            <div className="h-64"><ChartComponent type="doughnut" data={chartVacancyData} options={{ maintainAspectRatio: false }} /></div>
+                                        </Card>
                                         <Card className="p-6 lg:col-span-2 card-hover bg-white border border-slate-100">
-                                            <div className="flex justify-between items-center mb-6">
-                                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Icon name="chart-bar" weight="fill" className="text-amber-600"/> Balanço Financeiro (Realizado)</h3>
-                                            </div>
-                                            <div className="h-64">
-                                                <ChartComponent type="bar" data={chartFinancialData} options={{ 
-                                                    maintainAspectRatio: false, 
-                                                    plugins: { legend: { display: false } },
-                                                    scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f1f5f9' } }, x: { grid: { display: false } } }
-                                                }} />
-                                            </div>
-                                        </Card>
-                                        <Card className="p-6 card-hover bg-white border border-slate-100">
-                                            <div className="flex justify-between items-center mb-6">
-                                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Icon name="chart-pie-slice" weight="fill" className="text-amber-600"/> Distribuição</h3>
-                                            </div>
-                                            <div className="h-64">
-                                                <ChartComponent type="doughnut" data={chartOccupancyData} options={{ 
-                                                    maintainAspectRatio: false,
-                                                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11, weight: 'bold' } } } }
-                                                }} />
-                                            </div>
-                                        </Card>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
-                                        <Card className="p-6 card-hover bg-white border border-amber-50 text-left">
-                                            <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-3 uppercase tracking-tighter"><div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg"><Icon name="money" weight="fill"/></div> Rendimento Total do Último Mês</h3>
-                                            <div className="space-y-6">
-                                                <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-b from-slate-50 to-white rounded-3xl border border-slate-100 shadow-inner text-center relative overflow-hidden">
-                                                    <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Receita Líquida Consolidada</p>
-                                                    <h2 className="text-5xl font-black text-amber-600 tracking-tighter text-center">{formatCurrency(stats.balance)}</h2>
-                                                    <p className="text-[10px] text-slate-400 mt-3 font-extrabold uppercase tracking-widest bg-white px-3 py-1 rounded-full border shadow-sm text-center">Mês de Referência: Atual</p>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                    <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl">
-                                                        <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1 opacity-70">Entradas</p>
-                                                        <p className="text-xl font-black text-amber-800">{formatCurrency(stats.totalIncome)}</p>
-                                                    </div>
-                                                    <div className="p-4 bg-red-50/50 border border-red-100 rounded-2xl">
-                                                        <p className="text-[10px] font-black text-red-700 uppercase tracking-widest mb-1 opacity-70">Saídas</p>
-                                                        <p className="text-xl font-black text-red-800">{formatCurrency(stats.totalExpense)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Card>
-
-                                        <Card className="p-6 card-hover overflow-y-auto max-h-[500px] text-left">
-                                            <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-3 uppercase tracking-tighter text-left"><div className="p-1.5 bg-black text-amber-500 rounded-lg"><Icon name="bell-ringing" weight="fill"/></div> Alertas do Sistema</h3>
-                                            
-                                            {/* ALARMES DE DESOCUPAÇÃO */}
-                                            {properties.filter(p => p.status === 'Vago').map(p => {
-                                                const vDate = p.vacated_at ? new Date(p.vacated_at) : null;
-                                                const diffDays = vDate ? Math.floor((new Date() - vDate) / (1000 * 60 * 60 * 24)) : 0;
-                                                const isCritical = diffDays >= 30;
-
-                                                return (
-                                                    <div key={`alert-vac-${p.id}`} className={`mb-3 p-3 border rounded-xl flex items-center justify-between transition-all border-l-4 group ${isCritical ? 'bg-amber-50 border-amber-200 border-l-amber-600' : 'bg-slate-50 border-slate-200 border-l-slate-400'}`}>
-                                                        <div className="text-left">
-                                                            <p className={`text-xs font-extrabold ${isCritical ? 'text-amber-900' : 'text-slate-800'}`}>
-                                                                {isCritical ? 'ALERTA: Vago há +1 Mês' : 'Aviso: Ativo Desocupado'}
-                                                            </p>
-                                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">{p.nickname}</p>
-                                                            {vDate && <p className="text-[9px] text-slate-400 mt-0.5 italic">Desde: {vDate.toLocaleDateString()}</p>}
-                                                        </div>
-                                                        <Icon name={isCritical ? "warning-diamond" : "house-line"} className={isCritical ? "text-amber-600" : "text-slate-400"} size={20} weight="fill"/>
-                                                    </div>
-                                                );
-                                            })}
-
-                                            {/* Alerta Jurídico Clicável */}
-                                            {properties.filter(p => ['Judicial', 'Penhora', 'Dívida Ativa'].includes(p.legal_status)).map(p => (
-                                                <div key={`alert-leg-${p.id}`} onClick={() => setActiveTab('situation')} className="mb-3 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-red-100 transition-all border-l-4 border-l-red-500 group">
-                                                    <div className="text-left">
-                                                        <p className="text-xs font-extrabold text-red-800">Risco Jurídico: {p.nickname}</p>
-                                                        <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-0.5 group-hover:underline">Gerir Auditoria</p>
-                                                    </div>
-                                                    <Icon name="warning" className="text-red-500 group-hover:scale-110 transition-transform" size={20} weight="bold"/>
-                                                </div>
-                                            ))}
-
-                                            {/* Alerta Financeiro Clicável */}
-                                            {financial.filter(f => f.status === 'Pendente').map(f => (
-                                                <div key={`alert-fin-${f.id}`} onClick={() => setActiveTab('finance')} className="mb-3 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-amber-100 transition-all border-l-4 border-l-amber-400 group">
-                                                    <div className="text-left">
-                                                        <p className="text-xs font-extrabold text-slate-800">{f.description}</p>
-                                                        <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest group-hover:underline">Resolver na Tesouraria</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-xs text-amber-700 font-black">{formatCurrency(f.value)}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                            <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2"><Icon name="chart-bar" weight="fill" className="text-amber-600"/> Fluxo de Caixa Realizado</h3>
+                                            <div className="h-64"><ChartComponent type="bar" data={chartFinancialData} options={{ maintainAspectRatio: false, plugins: { legend: { display: false } } }} /></div>
                                         </Card>
                                     </div>
                                 </div>
                             )}
 
-                            {/* SITUAÇÃO LEGAL */}
+                            {activeTab === 'reports' && (
+                                <div className="space-y-8 animate-fade-in text-left">
+                                    <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
+                                        <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-600 mb-4"><Icon name="scroll" size={32} weight="duotone"/></div>
+                                        <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Painel Master de Auditoria</h2>
+                                        <p className="text-slate-500 font-bold max-w-md mx-auto mt-2">Gere relatórios detalhados para fiscalizar a atuação da imobiliária e garantir a saúde do seu patrimônio.</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        {[
+                                            { id: 'performance', title: 'Performance de Repasse', icon: 'trend-up', desc: 'Auditoria de renda bruta vs líquida após taxas de adm.', color: 'amber' },
+                                            { id: 'docs', title: 'Auditoria Documental', icon: 'folder-lock', desc: 'Status de matrículas, escrituras e IPTU dos ativos.', color: 'blue' },
+                                            { id: 'finance', title: 'Fluxo Financeiro', icon: 'currency-dollar', desc: 'Lançamentos detalhados de receitas e despesas do mês.', color: 'green' },
+                                            { id: 'tenants', title: 'Listagem de Ocupantes', icon: 'users', desc: 'Dados consolidados de todos os locatários ativos.', color: 'slate' }
+                                        ].map(rep => (
+                                            <Card key={rep.id} className="p-6 card-hover border-none shadow-md flex flex-col justify-between group">
+                                                <div className="text-left">
+                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${rep.color === 'amber' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-[#002147]'}`}><Icon name={rep.icon} size={24} weight="fill"/></div>
+                                                    <h3 className="font-black text-lg text-slate-800 uppercase tracking-tighter mb-2">{rep.title}</h3>
+                                                    <p className="text-xs font-bold text-slate-400 mb-6">{rep.desc}</p>
+                                                </div>
+                                                <button onClick={() => generateReportDOC(rep.id)} className="w-full py-3 bg-[#002147] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 text-center">
+                                                    <Icon name="download-simple" weight="bold"/> Baixar (.doc)
+                                                </button>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {activeTab === 'situation' && (
                                 <div className="space-y-8 animate-fade-in text-left">
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-left">
-                                        <Card className="p-5 border-l-4 border-l-amber-500 flex items-center justify-between">
-                                            <div className="text-left"><p className="text-[10px] font-black uppercase text-slate-400">Regularizados</p><h4 className="text-2xl font-black text-slate-800">{properties.filter(p=>p.legal_status==='Regular').length}</h4></div>
-                                            <Icon name="check-circle" size={32} className="text-amber-500" weight="fill"/>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <Card className={`p-6 border-l-4 shadow-sm bg-white cursor-pointer transition-all ${situationFilter === 'pending' ? 'border-amber-600 scale-105' : 'border-amber-500'}`} onClick={() => setSituationFilter('pending')}>
+                                            <div className="flex justify-between items-center"><div><p className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-left">Auditados com Pendência</p><h4 className="text-3xl font-black text-[#002147] text-left">{stats.pendingDocs}</h4></div><Icon name="warning-diamond" size={40} className="text-amber-500" weight="fill"/></div>
                                         </Card>
-                                        <Card className="p-5 border-l-4 border-l-orange-500 flex items-center justify-between">
-                                            <div className="text-left"><p className="text-[10px] font-black uppercase text-slate-400">Doc. Pendente</p><h4 className="text-2xl font-black text-slate-800">{stats.pendingDocs}</h4></div>
-                                            <Icon name="file-text" size={32} className="text-orange-500" weight="fill"/>
+                                        <Card className={`p-6 border-l-4 shadow-sm bg-white cursor-pointer transition-all ${situationFilter === 'ok' ? 'border-blue-600 scale-105' : 'border-blue-500'}`} onClick={() => setSituationFilter('ok')}>
+                                            <div className="flex justify-between items-center"><div><p className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-left">Documentação 100% OK</p><h4 className="text-3xl font-black text-[#002147] text-left">{stats.okDocs}</h4></div><Icon name="check-circle" size={40} className="text-blue-500" weight="fill"/></div>
                                         </Card>
-                                        <Card className="p-5 border-l-4 border-l-red-500 flex items-center justify-between">
-                                            <div className="text-left"><p className="text-[10px] font-black uppercase text-slate-400">Risco Elevado</p><h4 className="text-2xl font-black text-slate-800">{stats.riskLegal}</h4></div>
-                                            <Icon name="warning-diamond" size={32} className="text-red-500" weight="fill"/>
-                                        </Card>
-                                        <Card className="p-5 border-l-4 border-l-black flex items-center justify-between">
-                                            <div className="text-left"><p className="text-[10px] font-black uppercase text-slate-400">Total Ativos</p><h4 className="text-2xl font-black text-slate-800">{stats.totalProperties}</h4></div>
-                                            <Icon name="buildings" size={32} className="text-black" weight="fill"/>
+                                        <Card className={`p-6 border-l-4 shadow-sm bg-white cursor-pointer transition-all ${situationFilter === 'all' ? 'border-[#002147] scale-105' : 'border-slate-300'}`} onClick={() => setSituationFilter('all')}>
+                                            <div className="flex justify-between items-center"><div><p className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-left">Total de Ativos Auditados</p><h4 className="text-3xl font-black text-[#002147] text-left">{stats.totalProperties}</h4></div><Icon name="shield-check" size={40} className="text-[#002147]" weight="fill"/></div>
                                         </Card>
                                     </div>
+                                    <Card className="overflow-hidden border-none shadow-md">
+                                        <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
+                                            <h3 className="font-black text-[#002147] uppercase tracking-tighter flex items-center gap-2"><Icon name="list-checks" weight="bold" className="text-amber-600"/> Tabela de Auditoria de Patrimônio</h3>
+                                            <div className="flex gap-2 bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
+                                                <button onClick={() => setSituationFilter('all')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${situationFilter === 'all' ? 'bg-[#002147] text-amber-500 shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Todos</button>
+                                                <button onClick={() => setSituationFilter('pending')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${situationFilter === 'pending' ? 'bg-amber-100 text-amber-700 shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Pendentes</button>
+                                                <button onClick={() => setSituationFilter('ok')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${situationFilter === 'ok' ? 'bg-blue-100 text-blue-700 shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Regularizados</button>
+                                            </div>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-xs text-left font-bold min-w-[800px]">
+                                                <thead className="bg-white text-slate-400 uppercase font-extrabold text-[10px] border-b text-left">
+                                                    <tr><th className="p-4">Imóvel</th><th className="p-4">Matrícula</th><th className="p-4 text-center">Docs Matrícula</th><th className="p-4 text-center">Escritura</th><th className="p-4 text-center">IPTU</th><th className="p-4 text-center">Status Final</th><th className="p-4 text-center">Ação</th></tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50 bg-white text-left">
+                                                    {filteredSituationProperties.map(p => {
+                                                        const isOk = p.doc_registration && p.doc_deed && p.doc_iptu;
+                                                        return (
+                                                            <tr key={p.id} className={`hover:bg-slate-50/50 transition-colors ${!isOk ? 'bg-amber-50/20' : ''}`}>
+                                                                <td className="p-4"><p className="text-[#002147] font-black uppercase tracking-tighter text-left">{p.nickname}</p><p className="text-[9px] text-slate-400 italic truncate max-w-[200px] text-left">{p.address}</p></td>
+                                                                <td className="p-4 text-slate-500 text-left">{p.registration_number || '---'}</td>
+                                                                <td className="p-4 text-center">{p.doc_registration ? <Icon name="check-circle" className="text-blue-500" weight="fill" size={18}/> : <Icon name="warning-circle" className="text-amber-500" weight="fill" size={18}/>}</td>
+                                                                <td className="p-4 text-center">{p.doc_deed ? <Icon name="check-circle" className="text-blue-500" weight="fill" size={18}/> : <Icon name="warning-circle" className="text-amber-500" weight="fill" size={18}/>}</td>
+                                                                <td className="p-4 text-center">{p.doc_iptu ? <Icon name="check-circle" className="text-blue-500" weight="fill" size={18}/> : <Icon name="warning-circle" className="text-amber-500" weight="fill" size={18}/>}</td>
+                                                                <td className="p-4 text-center"><span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${isOk ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{isOk ? 'REGULARIZADO' : 'PENDENTE'}</span></td>
+                                                                <td className="p-4 text-center"><button onClick={() => openModal('property', p)} className="p-2 bg-slate-100 text-[#002147] rounded-lg hover:bg-[#002147] hover:text-white transition-all"><Icon name="pencil-simple" weight="bold"/></button></td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </Card>
+                                </div>
+                            )}
 
-                                    <div className="space-y-8">
-                                        {['Regular', 'Espólio', 'Inventário em Trâmite', 'Nome de Parente', 'Usucapião', 'Contrato de Gaveta', 'Judicial', 'Penhora'].map(status => {
-                                            const props = properties.filter(p => (p.legal_status || 'Regular') === status);
-                                            if (props.length === 0) return null;
-                                            return (
-                                                <div key={status} className="text-left">
-                                                    <h3 className="font-extrabold text-lg text-black mb-4 flex items-center gap-2 uppercase tracking-tighter"><Icon name="folder-simple-lock" weight="bold" className="text-amber-600"/> {status}</h3>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                        {props.map(p => (
-                                                            <Card key={p.id} className="p-6 card-hover border border-slate-100 text-left">
-                                                                <div className="flex justify-between items-start text-left mb-3">
-                                                                    <h4 className="font-black text-lg text-slate-800 mb-0.5">{p.nickname}</h4>
-                                                                </div>
-                                                                <p className="text-xs font-bold text-slate-400 mb-4">{p.address}</p>
-                                                                <div className="space-y-2 mb-4 bg-slate-50 p-3 rounded-xl border text-[10px] font-black uppercase tracking-widest text-left">
-                                                                    <div className="flex justify-between text-left"><span>Matrícula</span>{p.doc_registration ? <Icon name="check-circle" className="text-amber-600" weight="fill" size={14}/> : <Icon name="x-circle" className="text-red-400" weight="fill" size={14}/>}</div>
-                                                                    <div className="flex justify-between text-left"><span>Escritura</span>{p.doc_deed ? <Icon name="check-circle" className="text-amber-600" weight="fill" size={14}/> : <Icon name="x-circle" className="text-red-400" weight="fill" size={14}/>}</div>
-                                                                    <div className="flex justify-between text-left"><span>IPTU Pago</span>{p.doc_iptu ? <Icon name="check-circle" className="text-amber-600" weight="fill" size={14}/> : <Icon name="x-circle" className="text-red-400" weight="fill" size={14}/>}</div>
-                                                                </div>
-                                                                {p.legal_notes && <div className="bg-amber-50 p-3 rounded-xl text-[10px] text-amber-900 italic border border-amber-100 mb-3 text-left">"{p.legal_notes}"</div>}
-                                                                <div className="w-full py-2 bg-slate-100 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest text-center">Apenas Consulta</div>
-                                                            </Card>
-                                                        ))}
+                            {activeTab === 'properties' && (
+                                <div className="space-y-6 animate-fade-in text-left">
+                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                        <h2 className="text-lg font-extrabold uppercase text-left">Gestão de Ativos</h2>
+                                        <button onClick={() => openModal('property')} className="bg-[#002147] text-amber-500 px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-lg"><Icon name="plus" weight="bold"/> NOVO IMÓVEL</button>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {filteredProperties.map(p => (
+                                            <Card key={p.id} className="overflow-hidden group card-hover border-none shadow-md text-left">
+                                                <div className={`h-2 w-full ${p.status === 'Alugado' ? 'bg-[#002147]' : (p.status === 'Vago' ? 'bg-amber-600' : 'bg-red-500')}`}></div>
+                                                <div className="p-5 text-left">
+                                                    <div className="flex justify-between items-start mb-1 text-left">
+                                                        <h3 className="font-extrabold text-lg text-slate-800 text-left">{p.nickname}</h3>
+                                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-800">{p.status}</span>
+                                                    </div>
+                                                    <p className="text-xs font-bold text-slate-500 mb-2 text-left">{p.address || 'Endereço não informado'}</p>
+                                                    <p className="text-[10px] font-black text-[#002147] opacity-60 uppercase mb-4 text-left">Matrícula: {p.registration_number || '-'}</p>
+                                                    <div className="flex justify-between items-center border-t border-slate-50 pt-3">
+                                                        <div className="text-left"><p className="text-[10px] font-black text-slate-400 uppercase text-left">Valor Aluguel</p><span className="font-extrabold text-lg text-left">{formatCurrency(p.base_rent)}</span></div>
+                                                        <div className="flex gap-1"><button onClick={() => openModal('property', p)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg"><Icon name="pencil-simple" weight="bold" size={16}/></button><button onClick={() => deleteFromCloud('properties', p.id, setProperties, properties)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Icon name="trash" weight="bold" size={16}/></button></div>
                                                     </div>
                                                 </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'tenants' && (
+                                <div className="space-y-6 animate-fade-in text-left">
+                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                        <h2 className="text-lg font-extrabold uppercase text-left">Base de Locatários</h2>
+                                        <button onClick={() => openModal('tenant')} className="bg-amber-600 text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-lg"><Icon name="plus" weight="bold"/> NOVO INQUILINO</button>
+                                    </div>
+                                    <Card className="p-0 overflow-x-auto border-none shadow-md">
+                                        <table className="w-full text-xs text-left font-bold min-w-[600px]">
+                                            <thead className="bg-slate-50 text-slate-400 uppercase font-extrabold text-[10px] border-b border-slate-100 text-left">
+                                                <tr><th className="p-4">Nome</th><th className="p-4">CPF/NIF</th><th className="p-4 text-center">Status</th><th className="p-4 text-center">Ações</th></tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50 text-left">
+                                                {filteredTenants.map(t => (
+                                                    <tr key={t.id} className="hover:bg-slate-50 text-left"><td className="p-4 text-left">{t.name}</td><td className="p-4 text-left">{t.cpf}</td><td className="p-4 text-center"><span className="px-3 py-1 rounded-full text-[10px] uppercase font-extrabold bg-amber-100 text-amber-700">{t.status}</span></td><td className="p-4 flex justify-center gap-3"><button onClick={() => openModal('tenant', t)} className="text-amber-600"><Icon name="pencil-simple" weight="bold" size={18}/></button><button onClick={() => deleteFromCloud('tenants', t.id, setTenants, tenants)} className="text-red-400"><Icon name="trash" weight="bold" size={18}/></button></td></tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </Card>
+                                </div>
+                            )}
+
+                            {activeTab === 'contracts' && (
+                                <div className="space-y-6 animate-fade-in text-left">
+                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-left">
+                                        <h2 className="text-lg font-extrabold uppercase text-left">Contratos & Auditoria</h2>
+                                        <button onClick={() => openModal('contract')} className="bg-[#002147] text-amber-500 px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-lg text-center">UPLOAD CONTRATO</button>
+                                    </div>
+                                    <div className="space-y-3 text-left">
+                                        {filteredContracts.map(c => {
+                                            const prop = properties.find(p => p.id === c.propertyId);
+                                            const tenant = tenants.find(t => t.id === c.tenantId);
+                                            return (
+                                                <Card key={c.id} className="p-5 flex flex-col md:flex-row justify-between items-center gap-6 border-l-4 border-l-[#002147] shadow-md text-left">
+                                                    <div className="flex items-center gap-4 flex-1 text-left">
+                                                        <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center font-bold text-lg"><Icon name="file-pdf" weight="fill"/></div>
+                                                        <div className="text-left">
+                                                            <h3 className="font-extrabold text-base text-slate-800 uppercase text-left">{prop?.nickname || 'Ativo Auditado'}</h3>
+                                                            <p className="text-xs font-bold text-slate-500 text-left">Locatário: {tenant?.name || 'Não identificado'}</p>
+                                                            <div className="flex gap-2 mt-2">
+                                                                <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${c.inspection_entry_data ? 'bg-blue-100 text-blue-700' : 'bg-red-50 text-red-400'}`}>Vistoria Entrada: {c.inspection_entry_data ? 'OK' : 'FALTA'}</span>
+                                                                <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${c.inspection_exit_data ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'}`}>Vistoria Saída: {c.inspection_exit_data ? 'OK' : '--'}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-8 text-left">
+                                                        <div className="text-right text-left"><p className="text-[10px] text-slate-400 uppercase font-extrabold text-left">Taxa de Adm.</p><p className="text-sm font-black text-amber-600 text-left">{c.management_fee || 0}%</p></div>
+                                                        <div className="text-right text-left"><p className="text-[10px] text-slate-400 uppercase font-extrabold text-left">Aluguel Bruto</p><p className="text-xl font-black text-slate-800 text-left">{formatCurrency(c.rent_value)}</p></div>
+                                                        <div className="flex gap-2"><button onClick={() => openModal('contract_view', c)} className="p-2.5 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all"><Icon name="eye" weight="bold" size={18}/></button><button onClick={() => openModal('contract', c)} className="p-2.5 bg-slate-100 rounded-xl"><Icon name="pencil-simple" weight="bold" size={18}/></button><button onClick={() => deleteFromCloud('contracts', c.id, setContracts, contracts)} className="p-2.5 text-red-400 hover:bg-red-50 rounded-xl"><Icon name="trash" weight="bold" size={18}/></button></div>
+                                                    </div>
+                                                </Card>
                                             );
                                         })}
                                     </div>
                                 </div>
                             )}
 
-                            {/* PROPRIEDADES */}
-                            {activeTab === 'properties' && (
-                                <div className="space-y-6 animate-fade-in text-left">
-                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-left">
-                                        <h2 className="text-lg font-extrabold text-slate-800">Meus Ativos</h2>
-                                        
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <Icon name="magnifying-glass" className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Buscar Imóvel..." 
-                                                    className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-amber-600 w-64 transition-all"
-                                                    value={searchTerm}
-                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                />
-                                            </div>
-                                            <button onClick={() => openModal('property')} className="bg-black text-amber-500 px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-lg hover:bg-slate-900 transition-colors"><Icon name="plus" weight="bold"/> NOVO IMÓVEL</button>
-                                        </div>
-                                    </div>
-                                    
-                                    {filteredProperties.length === 0 ? <EmptyState message="Nenhum imóvel encontrado com este termo." /> : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
-                                            {filteredProperties.map(p => {
-                                                const activeContract = contracts.find(c => c.propertyId == p.id && c.status === 'Ativo');
-                                                const currentTenant = activeContract ? tenants.find(t => t.id == activeContract.tenantId) : null;
-
-                                                return (
-                                                    <Card key={p.id} className="overflow-hidden group card-hover border-none shadow-md text-left flex flex-col justify-between">
-                                                        <div>
-                                                            <div className={`h-2 w-full ${p.status === 'Alugado' ? 'bg-black' : (p.status === 'Vago' ? 'bg-amber-600' : 'bg-slate-400')}`}></div>
-                                                            <div className="p-5 pb-0 text-left">
-                                                                <div className="flex justify-between items-start mb-1">
-                                                                    <h3 className="font-extrabold text-lg text-slate-800 text-left">{p.nickname}</h3>
-                                                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${p.status === 'Alugado' ? 'bg-black text-amber-500' : (p.status === 'Vago' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800')}`}>
-                                                                        {p.status}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-xs font-bold text-slate-500 mb-3 text-left">{p.address}</p>
-                                                                
-                                                                {currentTenant ? (
-                                                                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 mb-3 flex items-center gap-3">
-                                                                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black shadow-sm border border-amber-200">
-                                                                            <Icon name="user" weight="bold" size={14}/>
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Locado para</p>
-                                                                            <p className="text-xs font-bold text-slate-800 leading-none">{currentTenant.name}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : p.status === 'Alugado' ? (
-                                                                    <div className="bg-red-50 p-2.5 rounded-xl border border-red-100 mb-3 text-red-800 text-[10px] font-bold flex items-center gap-2">
-                                                                        <Icon name="warning" weight="bold" size={14}/> Inquilino não vinculado
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="h-12 mb-3 flex items-center text-slate-300 text-xs font-bold italic">
-                                                                        <Icon name="prohibit" className="mr-2"/> Sem ocupante
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="px-5 pb-5 pt-0">
-                                                            <div className="flex justify-between items-center border-t border-slate-50 pt-3">
-                                                                <div>
-                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Base</p>
-                                                                    <span className="font-extrabold text-lg text-slate-800">{formatCurrency(p.base_rent)}</span>
-                                                                </div>
-                                                                <div className="flex gap-2">
-                                                                    <button onClick={() => openModal('property', p)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg"><Icon name="pencil-simple" weight="bold" size={16}/></button>
-                                                                    <button onClick={() => deleteItem(p.id, properties, setProperties, 'properties')} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Icon name="trash" weight="bold" size={16}/></button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </Card>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* INQUILINOS */}
-                            {activeTab === 'tenants' && (
-                                <div className="space-y-6 animate-fade-in text-left">
-                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                                        <h2 className="text-lg font-extrabold text-slate-800 uppercase tracking-tighter text-left">Locatários</h2>
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <Icon name="magnifying-glass" className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Nome ou CPF..." 
-                                                    className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-black w-64 transition-all"
-                                                    value={searchTerm}
-                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                />
-                                            </div>
-                                            <button onClick={() => openModal('tenant')} className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-lg transition-all transform hover:-translate-y-1"><Icon name="plus" weight="bold"/> NOVO INQUILINO</button>
-                                        </div>
-                                    </div>
-                                    {filteredTenants.length === 0 ? <EmptyState message="Nenhum inquilino encontrado." /> : (
-                                        <Card className="p-0 overflow-x-auto border-none shadow-md">
-                                            <table className="w-full text-xs text-left font-bold text-left min-w-[600px]">
-                                                <thead className="bg-slate-50 text-slate-400 uppercase font-extrabold text-[10px] border-b border-slate-100 text-left">
-                                                    <tr><th className="p-4">Nome</th><th className="p-4 text-center">Docs</th><th className="p-4 text-center">Status</th><th className="p-4 text-center">Ações</th></tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-50 text-left">
-                                                    {filteredTenants.map(t => (
-                                                        <tr key={t.id} className="hover:bg-slate-50 transition-colors text-slate-700 text-left text-left">
-                                                            <td className="p-4">{t.name}</td>
-                                                            <td className="p-4 text-center"><span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.documents_checked ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{t.documents_checked ? 'Verificado':'Pendente'}</span></td>
-                                                            <td className="p-4 text-center"><span className={`px-3 py-1 rounded-full text-[10px] uppercase font-extrabold ${t.status === 'Ativo' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>{t.status}</span></td>
-                                                            <td className="p-4 flex justify-center gap-3">
-                                                                <a href={`https://wa.me/${t.phone}`} target="_blank" className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg"><Icon name="whatsapp-logo" weight="bold" size={18}/></a>
-                                                                <button onClick={() => openModal('tenant', t)} className="text-amber-600 hover:text-amber-800 transition-colors"><Icon name="pencil-simple" weight="bold" size={18}/></button>
-                                                                <button onClick={() => deleteItem(t.id, tenants, setTenants, 'tenants')} className="text-red-400 hover:text-red-600 transition-colors"><Icon name="trash" weight="bold" size={18}/></button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </Card>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* CONTRATOS */}
-                            {activeTab === 'contracts' && (
-                                <div className="space-y-6 animate-fade-in text-left text-left">
-                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-left text-left">
-                                        <h2 className="text-lg font-extrabold text-slate-800 uppercase tracking-tighter">Gestão Documental</h2>
-                                        
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <Icon name="magnifying-glass" className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Buscar Contrato..." 
-                                                    className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-amber-600 w-64 transition-all"
-                                                    value={searchTerm}
-                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                />
-                                            </div>
-                                            <button onClick={() => openModal('contract')} className="bg-black hover:bg-slate-900 text-amber-500 px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-lg transition-all transform hover:-translate-y-1"><Icon name="cloud-arrow-up" weight="bold"/> UPLOAD CONTRATO</button>
-                                        </div>
-                                    </div>
-                                    {filteredContracts.length === 0 ? <EmptyState message="Nenhum contrato encontrado." /> : (
-                                        <div className="grid grid-cols-1 gap-3 text-left text-left">
-                                            {filteredContracts.map(c => {
-                                                const prop = properties.find(p => p.id === c.propertyId);
-                                                const tenant = tenants.find(t => t.id === c.tenantId);
-                                                return (
-                                                    <Card key={c.id} className="p-5 flex flex-col md:flex-row justify-between items-center gap-6 border-l-4 border-l-black shadow-md text-left">
-                                                        <div className="flex items-center gap-4 flex-1 text-left w-full">
-                                                            <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center font-bold text-lg"><Icon name="file-pdf" weight="fill"/></div>
-                                                            <div className="text-left text-left">
-                                                                <h3 className="font-extrabold text-base text-slate-800 uppercase tracking-tighter">{prop?.nickname || 'Ativo Excluído'}</h3>
-                                                                <p className="text-xs font-bold text-slate-500">Locatário: {tenant?.name || 'Não identificado'}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-6 text-right text-left w-full md:w-auto justify-between md:justify-end">
-                                                            <div className="text-right text-left text-left"><p className="text-[10px] text-slate-400 uppercase font-extrabold tracking-widest">Aluguer</p><p className="text-xl font-black text-slate-800">{formatCurrency(c.rent_value)}</p></div>
-                                                            <div className="flex gap-2">
-                                                                <button onClick={() => openModal('contract_view', c)} className="p-2.5 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all"><Icon name="eye" weight="bold" size={18}/></button>
-                                                                {c.fileData && <button onClick={() => downloadContract(c)} className="p-2.5 bg-slate-100 text-black rounded-xl hover:bg-black hover:text-amber-500 transition-all"><Icon name="download-simple" weight="bold" size={18}/></button>}
-                                                                <button onClick={() => openModal('contract', c)} className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors"><Icon name="pencil-simple" weight="bold" size={18}/></button>
-                                                                <button onClick={() => deleteItem(c.id, contracts, setContracts, 'contracts')} className="p-2.5 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors"><Icon name="trash" weight="bold" size={18}/></button>
-                                                            </div>
-                                                        </div>
-                                                    </Card>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* FINANCEIRO (DOURADO) */}
                             {activeTab === 'finance' && (
                                 <div className="space-y-6 animate-fade-in text-left">
-                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-left">
-                                        <h2 className="text-lg font-extrabold text-slate-800 uppercase tracking-tighter text-left">Tesouraria</h2>
-                                        
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <Icon name="magnifying-glass" className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Filtrar Lançamentos..." 
-                                                    className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-amber-600 w-64 transition-all"
-                                                    value={searchTerm}
-                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                />
-                                            </div>
-                                            <button onClick={() => openModal('finance')} className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-lg transition-all transform hover:-translate-y-1"><Icon name="plus" weight="bold"/> LANÇAMENTO</button>
-                                        </div>
+                                    <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                        <h2 className="text-lg font-extrabold uppercase text-left">Fluxo Financeiro</h2>
+                                        <button onClick={() => openModal('finance')} className="bg-amber-600 text-white px-5 py-2.5 rounded-xl text-xs font-extrabold shadow-lg">LANÇAMENTO</button>
                                     </div>
-                                    {filteredFinancial.length === 0 ? <EmptyState message="Nenhum registo financeiro encontrado." /> : (
-                                        <Card className="p-0 overflow-x-auto border-none shadow-md text-left">
-                                            <table className="w-full text-xs text-left font-bold text-left min-w-[600px]">
-                                                <thead className="bg-slate-50 text-slate-400 uppercase font-extrabold text-[10px] border-b border-slate-100 text-left">
-                                                    <tr><th className="p-4">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right">Valor</th><th className="p-4 text-center">Status</th><th className="p-4 text-center">Ações</th></tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-50 text-left">
-                                                    {filteredFinancial.map(f => (
-                                                        <tr key={f.id} className="hover:bg-slate-50 transition-colors text-slate-700 text-left text-left">
-                                                            <td className="p-4">{new Date(f.date).toLocaleDateString()}</td>
-                                                            <td className="p-4 uppercase tracking-tighter">{f.description}</td>
-                                                            <td className={`p-4 text-right font-black ${f.type === 'Receita' ? 'text-amber-600' : 'text-red-500'}`}>{f.type === 'Despesa' ? '-' : '+'} {formatCurrency(f.value)}</td>
-                                                            <td className="p-4 text-center"><span className={`px-3 py-1 rounded-full text-[10px] uppercase font-extrabold ${f.status === 'Pago' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>{f.status}</span></td>
-                                                            <td className="p-4 flex justify-center gap-3">
-                                                                {f.type === 'Receita' && <button onClick={() => openModal('receipt', f)} className="text-slate-400 hover:text-amber-600"><Icon name="receipt" weight="bold" size={18}/></button>}
-                                                                <button onClick={() => deleteItem(f.id, financial, setFinancial, 'financial')} className="text-red-300 hover:text-red-500"><Icon name="trash" weight="bold" size={18}/></button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </Card>
-                                    )}
+                                    <Card className="p-0 overflow-x-auto shadow-md">
+                                        <table className="w-full text-xs font-bold text-left">
+                                            <thead className="bg-slate-50 text-slate-400 uppercase font-extrabold text-[10px] border-b text-left">
+                                                <tr><th className="p-4">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right">Valor</th><th className="p-4 text-center">Status</th><th className="p-4 text-center">Ações</th></tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50 text-left">
+                                                {filteredFinancial.map(f => (
+                                                    <tr key={f.id} className="hover:bg-slate-50 text-left"><td className="p-4 text-left">{new Date(f.date).toLocaleDateString()}</td><td className="p-4 uppercase text-left">{f.description}</td><td className={`p-4 text-right font-black ${f.type === 'Receita' ? 'text-amber-600' : 'text-red-500'}`}>{f.type === 'Receita'?'+':'-'} {formatCurrency(f.value)}</td><td className="p-4 text-center"><span className="px-3 py-1 rounded-full text-[10px] uppercase bg-amber-100 text-amber-700">{f.status}</span></td><td className="p-4 text-center"><button onClick={() => deleteFromCloud('financial', f.id, setFinancial, financial)} className="text-red-300"><Icon name="trash" weight="bold" size={18}/></button></td></tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </Card>
                                 </div>
                             )}
 
-                            {/* RELATÓRIOS */}
-                            {activeTab === 'reports' && (
-                                <div className="space-y-6 animate-fade-in text-left text-left">
-                                    <h2 className="text-lg font-extrabold text-slate-800 uppercase tracking-tighter">Relatórios Master</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left text-center">
-                                        <Card className="p-6 hover:shadow-lg transition-all cursor-pointer group border-b-4 border-b-black text-center" onClick={() => openModal('report_finance')}>
-                                            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 transition-transform mx-auto w-fit text-center"><Icon name="currency-dollar" size={32} weight="duotone" /></div>
-                                            <h3 className="font-extrabold text-base text-slate-700 mt-3 uppercase text-center">Fluxo Financeiro</h3>
-                                        </Card>
-                                        <Card className="p-6 hover:shadow-lg transition-all cursor-pointer group border-b-4 border-b-amber-600 text-center" onClick={() => openModal('report_occupancy')}>
-                                            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 transition-transform mx-auto w-fit text-center"><Icon name="house-line" size={32} weight="duotone" /></div>
-                                            <h3 className="font-extrabold text-base text-slate-700 mt-3 uppercase text-center">Ativos Ocupados</h3>
-                                        </Card>
-                                        <Card className="p-6 hover:shadow-lg transition-all cursor-pointer group border-b-4 border-b-slate-800 text-center" onClick={() => openModal('report_tenants')}>
-                                            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 transition-transform mx-auto w-fit text-center"><Icon name="users-three" size={32} weight="duotone" /></div>
-                                            <h3 className="font-extrabold text-base text-slate-700 mt-3 uppercase text-center">Locatários</h3>
-                                        </Card>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* CONFIGURAÇÕES */}
                             {activeTab === 'config' && (
                                 <div className="space-y-6 animate-fade-in max-w-4xl mx-auto text-left">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                                        <Card className="p-6 shadow-lg border-t-4 border-t-black text-left">
-                                            <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-3 uppercase tracking-tighter text-left"><Icon name="user-circle" className="text-amber-600"/> Dados Mestre</h3>
-                                            <form onSubmit={handleSaveConfig} className="space-y-4 text-left text-left">
-                                                <div className="text-left text-left text-left text-left"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1 text-left">Nome da Administração</label><input className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm" value={userData.name} onChange={e => setUserData({...userData, name: e.target.value})} /></div>
-                                                <div className="text-left text-left text-left text-left"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1 text-left">Email Principal</label><input type="email" className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm" value={userData.email} onChange={e => setUserData({...userData, email: e.target.value})} /></div>
-                                                <button type="submit" className="w-full bg-black text-amber-500 font-black py-3 rounded-xl transition-all shadow-xl shadow-amber-900/20 uppercase tracking-widest text-[10px]">Guardar Dados Master</button>
+                                        <Card className="p-6 shadow-lg border-t-4 border-t-[#002147] text-left">
+                                            <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-3 uppercase tracking-tighter"><Icon name="user-circle" className="text-amber-600"/> Dados Mestre</h3>
+                                            <form onSubmit={handleSaveConfig} className="space-y-4 text-left">
+                                                <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Nome da Administração</label><input className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm text-left" value={userData.name} onChange={e => setUserData({...userData, name: e.target.value})} /></div>
+                                                <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">E-mail Principal</label><input type="email" className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm text-left" value={userData.email} onChange={e => setUserData({...userData, email: e.target.value})} /></div>
+                                                <div className="text-left"><label className="text-[10px] font-black text-amber-600 uppercase block mb-1 text-left">Dia de Repasse da Imobiliária (Alarme)</label><input type="number" min="1" max="31" className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm text-left" value={userData.repasse_day} onChange={e => setUserData({...userData, repasse_day: e.target.value})} /></div>
+                                                <button type="submit" className="w-full bg-[#002147] text-amber-50 font-black py-3 rounded-xl transition-all shadow-xl uppercase tracking-widest text-[10px] text-center">SALVAR DADOS MASTER</button>
                                             </form>
                                         </Card>
                                         <Card className="p-6 shadow-lg border-t-4 border-t-amber-600 text-left">
-                                            <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-3 uppercase tracking-tighter text-left"><Icon name="lock-key" className="text-amber-600"/> Alterar Senha Master</h3>
-                                            <form onSubmit={handleChangePassword} className="space-y-4 text-left text-left">
-                                                <input type="password" required className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm" placeholder="Senha Atual" value={configPasswordForm.current} onChange={e => setConfigPasswordForm({...configPasswordForm, current: e.target.value})} />
-                                                <input type="password" required className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm" placeholder="Nova Senha Master" value={configPasswordForm.newPass} onChange={e => setConfigPasswordForm({...configPasswordForm, newPass: e.target.value})} />
-                                                <input type="password" required className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm" placeholder="Confirmar Nova Senha" value={configPasswordForm.confirm} onChange={e => setConfigPasswordForm({...configPasswordForm, confirm: e.target.value})} />
-                                                <button type="submit" className="w-full bg-amber-600 hover:bg-black text-white font-black py-3 rounded-xl transition-all uppercase tracking-widest text-[10px] shadow-xl">Confirmar Nova Credencial</button>
+                                            <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-3 uppercase tracking-tighter"><Icon name="lock-key" className="text-amber-600"/> Alterar Senha Master</h3>
+                                            <form onSubmit={handleChangePassword} className="space-y-4 text-left">
+                                                <input type="password" required className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm text-left" placeholder="Senha Atual" value={configPasswordForm.current} onChange={e => setConfigPasswordForm({...configPasswordForm, current: e.target.value})} />
+                                                <input type="password" required className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm text-left" placeholder="Nova Senha Master" value={configPasswordForm.newPass} onChange={e => setConfigPasswordForm({...configPasswordForm, newPass: e.target.value})} />
+                                                <input type="password" required className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-600 outline-none font-bold text-slate-700 text-sm text-left" placeholder="Confirmar Nova Senha" value={configPasswordForm.confirm} onChange={e => setConfigPasswordForm({...configPasswordForm, confirm: e.target.value})} />
+                                                <button type="submit" className="w-full bg-amber-600 hover:bg-[#002147] text-white font-black py-3 rounded-xl transition-all uppercase tracking-widest text-[10px] shadow-xl text-center">CONFIRMAR NOVA CREDENCIAL</button>
                                             </form>
                                         </Card>
                                     </div>
                                 </div>
                             )}
-
                         </div>
-                        <footer className="bg-white border-t border-slate-200 py-3 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest no-print z-10 shrink-0">
-                            © 2026 SoftGestão. Todos os direitos reservados. Pertence a Adriana Mendes da Cruz Sousa. Todos os direitos e marca registrada são dela.
+                        <footer className="bg-white border-t border-slate-200 py-3 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest no-print shrink-0">
+                            © 2026 SoftGestão. Propriedade de Adriana Mendes da Cruz Sousa. Auditoria Master de Patrimônio.
                         </footer>
                     </main>
 
-                    {/* MODAL UNIVERSAL */}
                     {isModalOpen && (
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in print:p-0 print:bg-white text-left">
-                            <div className={`bg-white rounded-[2rem] shadow-2xl w-full ${['contract_view', 'receipt', 'report_finance', 'report_occupancy', 'report_tenants'].includes(modalType) ? 'max-w-7xl' : 'max-w-md'} overflow-hidden relative print:shadow-none print:max-w-full print:rounded-none border-t-8 border-amber-600 text-left flex flex-col`}>
-                                <div className="bg-white p-5 text-slate-800 flex justify-between items-center no-print border-b border-slate-100 text-left sticky top-0 z-10 shrink-0">
-                                    <h3 className="font-extrabold text-lg uppercase tracking-tighter text-left text-black">
-                                        {modalType === 'property' && 'Auditoria do Ativo'}
-                                        {modalType === 'tenant' && 'Ficha de Locatário'}
-                                        {modalType === 'contract' && 'Upload de Ficheiro Contratual'}
-                                        {modalType === 'finance' && 'Registo de Tesouraria'}
-                                        {modalType === 'receipt' && 'Recibo de Quitação'}
-                                        {modalType.startsWith('report_') && 'Painel Master de Auditoria'}
-                                        {modalType === 'contract_view' && 'Visualizador de Documentos'}
-                                    </h3>
-                                    <button onClick={closeModal} className="bg-slate-100 p-2 rounded-lg text-slate-400 hover:text-amber-600 transition-colors"><Icon name="x" weight="bold" size={20}/></button>
+                        <div className="fixed inset-0 bg-[#002147]/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in text-left">
+                            <div className={`bg-white rounded-[2rem] shadow-2xl w-full ${['contract_view', 'report_performance', 'report_docs', 'report_finance', 'report_tenants'].includes(modalType) ? 'max-w-7xl' : 'max-w-md'} overflow-hidden border-t-8 border-amber-600 flex flex-col max-h-[90vh]`}>
+                                <div className="bg-white p-5 flex justify-between items-center border-b border-slate-100 shrink-0 text-left">
+                                    <h3 className="font-extrabold text-lg uppercase tracking-tighter text-black text-left">Gestão de Auditoria Master</h3>
+                                    <button onClick={() => setIsModalOpen(false)} className="bg-slate-100 p-2 rounded-lg text-slate-400 hover:text-amber-600 transition-colors"><Icon name="x" weight="bold" size={20}/></button>
                                 </div>
 
-                                {modalType === 'contract_view' && editingItem ? (
-                                    <div className="flex flex-col h-[85vh] bg-slate-100">
-                                        <div className="bg-white px-6 py-3 border-b border-slate-200 flex justify-between items-center shadow-sm z-10 gap-4 shrink-0">
-                                            <div className="flex items-center gap-4">
-                                                <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
-                                                    <Icon name="file-pdf" className="text-red-600"/> 
-                                                    <span className="truncate max-w-[200px]">{editingItem.fileName || 'Documento'}</span>
-                                                </h3>
-                                                {pageCount > 1 && (
-                                                    <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1 border border-slate-200">
-                                                        <button onClick={() => changePage(-1)} disabled={pageNum <= 1} className="p-1.5 hover:bg-white rounded shadow-sm disabled:opacity-50 transition-colors"><Icon name="caret-left" weight="bold" size={16}/></button>
-                                                        <span className="text-xs font-bold px-2 whitespace-nowrap">Pág {pageNum} / {pageCount}</span>
-                                                        <button onClick={() => changePage(1)} disabled={pageNum >= pageCount} className="p-1.5 hover:bg-white rounded shadow-sm disabled:opacity-50 transition-colors"><Icon name="caret-right" weight="bold" size={16}/></button>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1 border border-slate-200 ml-2">
-                                                    <button onClick={() => changeZoom(-0.25)} className="p-1.5 hover:bg-white rounded shadow-sm transition-colors" title="Diminuir Zoom"><Icon name="minus" weight="bold" size={16}/></button>
-                                                    <span className="text-xs font-bold px-2 w-12 text-center">{Math.round(pdfScale * 100)}%</span>
-                                                    <button onClick={() => changeZoom(0.25)} className="p-1.5 hover:bg-white rounded shadow-sm transition-colors" title="Aumentar Zoom"><Icon name="plus" weight="bold" size={16}/></button>
+                                <div className="flex-1 overflow-y-auto text-left">
+                                    {modalType === 'contract_view' && editingItem ? (
+                                        <div className="flex flex-col h-[70vh] bg-slate-100 text-left">
+                                            <div className="bg-white px-6 py-3 border-b flex justify-between items-center shadow-sm shrink-0 text-left">
+                                                <h3 className="font-bold flex items-center gap-2 text-left"><Icon name="file-pdf" className="text-red-600"/> {editingItem.fileName || 'Contrato'}</h3>
+                                                <div className="flex items-center gap-4 text-left">
+                                                    <button onClick={() => setPdfScale(s => s + 0.2)} className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200"><Icon name="plus" size={16}/></button>
+                                                    <span className="text-xs font-bold">{Math.round(pdfScale * 100)}%</span>
+                                                    <button onClick={() => setPdfScale(s => Math.max(0.5, s - 0.2))} className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200"><Icon name="minus" size={16}/></button>
                                                 </div>
                                             </div>
-                                            {editingItem.fileData && (
-                                                <button onClick={() => downloadContract(editingItem)} className="px-3 py-1.5 bg-black text-amber-500 rounded-lg font-bold text-[10px] uppercase tracking-wide hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-sm">
-                                                    <Icon name="download-simple" weight="bold" size={16}/> Baixar
-                                                </button>
+                                            <div className="flex-1 overflow-auto p-8 flex justify-center text-left"><canvas id="pdf-canvas" className="bg-white shadow-2xl"></canvas></div>
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={saveItem} className="p-6 space-y-5 font-semibold text-left">
+                                            {modalType === 'property' && (
+                                                <div className="text-left space-y-5">
+                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Apelido do Imóvel</label><input required className="w-full p-3 border border-slate-200 rounded-xl outline-none font-bold text-left" value={propertyForm.nickname} onChange={e => setPropertyForm({...propertyForm, nickname: e.target.value})} /></div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Status de Ocupação</label>
+                                                            <select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={propertyForm.status} onChange={e => setPropertyForm({...propertyForm, status: e.target.value})}>
+                                                                <option value="Vago">Vago</option><option value="Alugado">Alugado</option><option value="Em Reforma">Em Reforma</option><option value="Invadido">Invadido</option><option value="Em Negociação">Em Negociação</option>
+                                                            </select>
+                                                        </div>
+                                                        <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Aluguel Pretendido (R$)</label><input type="number" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={propertyForm.base_rent} onChange={e => setPropertyForm({...propertyForm, base_rent: e.target.value})} /></div>
+                                                    </div>
+                                                    
+                                                    <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-left">
+                                                        <p className="text-[10px] font-black text-red-500 uppercase mb-3 text-left">Custos de Vacância (Auditoria de Perda)</p>
+                                                        <div className="grid grid-cols-3 gap-3 mb-3">
+                                                            <div><label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Condomínio</label><input type="number" className="w-full p-2 border border-slate-200 rounded-lg text-xs" value={propertyForm.monthly_condo_cost} onChange={e=>setPropertyForm({...propertyForm, monthly_condo_cost:e.target.value})} placeholder="R$ 000" /></div>
+                                                            <div><label className="text-[8px] font-black text-slate-400 uppercase block mb-1">IPTU Mensal</label><input type="number" className="w-full p-2 border border-slate-200 rounded-lg text-xs" value={propertyForm.monthly_iptu_cost} onChange={e=>setPropertyForm({...propertyForm, monthly_iptu_cost:e.target.value})} placeholder="R$ 000" /></div>
+                                                            <div><label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Manut. Est.</label><input type="number" className="w-full p-2 border border-slate-200 rounded-lg text-xs" value={propertyForm.monthly_maintenance_avg} onChange={e=>setPropertyForm({...propertyForm, monthly_maintenance_avg:e.target.value})} placeholder="R$ 000" /></div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[9px] font-black text-red-600 uppercase block mb-1">Data da Desocupação (Para Alarme de 30 dias)</label>
+                                                            <input type="date" className="w-full p-2 border border-red-200 rounded-lg text-xs font-bold" value={propertyForm.vacant_since} onChange={e=>setPropertyForm({...propertyForm, vacant_since:e.target.value})} />
+                                                        </div>
+                                                    </div>
+
+                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Endereço Completo</label><input required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={propertyForm.address} onChange={e => setPropertyForm({...propertyForm, address: e.target.value})} placeholder="Rua, Número, Bairro, Cidade - UF" /></div>
+                                                    
+                                                    <div className="bg-slate-50 p-4 rounded-xl border text-left">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase mb-3 text-left">Auditoria Documental</p>
+                                                        <div className="flex gap-4 text-left"><label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-4 h-4 accent-[#002147]" checked={propertyForm.doc_registration} onChange={e=>setPropertyForm({...propertyForm, doc_registration:e.target.checked})} /> Matrícula</label><label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-4 h-4 accent-[#002147]" checked={propertyForm.doc_deed} onChange={e=>setPropertyForm({...propertyForm, doc_deed:e.target.checked})} /> Escritura</label><label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-4 h-4 accent-[#002147]" checked={propertyForm.doc_iptu} onChange={e=>setPropertyForm({...propertyForm, doc_iptu:e.target.checked})} /> IPTU</label></div>
+                                                    </div>
+                                                </div>
                                             )}
-                                        </div>
-                                        <div className="flex-1 bg-slate-500 overflow-auto relative flex justify-center p-8">
-                                            {editingItem.fileData && editingItem.fileData.includes('pdf') ? (
-                                                <div className="shadow-2xl border border-slate-600 bg-white">
-                                                    <canvas id="pdf-canvas" className="block"></canvas>
-                                                </div>
-                                            ) : editingItem.fileData ? (
-                                                <div className="shadow-2xl border border-slate-600 bg-white" style={{ width: `${pdfScale * 100}%`, maxWidth: 'none' }}>
-                                                    <img src={editingItem.fileData} className="w-full h-auto block" alt="Documento" />
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center text-white/50 h-full">
-                                                    <Icon name="file-x" size={48} className="mb-4 opacity-50"/>
-                                                    <p className="font-bold text-base">Visualização Indisponível</p>
+
+                                            {modalType === 'tenant' && (
+                                                <div className="text-left space-y-5">
+                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Nome Completo</label><input required className="w-full p-3 border border-slate-200 rounded-xl outline-none font-bold text-left" value={tenantForm.name} onChange={e => setTenantForm({...tenantForm, name: e.target.value})} /></div>
+                                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                                        <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">CPF / NIF</label><input required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={tenantForm.cpf} onChange={e => setTenantForm({...tenantForm, cpf: maskCPF(e.target.value)})} /></div>
+                                                        <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Telefone</label><input required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={tenantForm.phone} onChange={e => setTenantForm({...tenantForm, phone: maskPhone(e.target.value)})} /></div>
+                                                    </div>
+                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">E-mail</label><input type="email" className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={tenantForm.email} onChange={e => setTenantForm({...tenantForm, email: e.target.value})} /></div>
+                                                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-left"><input type="checkbox" className="w-5 h-5 accent-[#002147]" checked={tenantForm.documents_checked} onChange={e => setTenantForm({...tenantForm, documents_checked: e.target.checked})} /><span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Documentação Auditada?</span></div>
                                                 </div>
                                             )}
-                                        </div>
-                                    </div>
-                                ) : modalType === 'receipt' && editingItem ? (
-                                    <div className="p-8 print-area text-left" id="print-area-container">
-                                        <div className="recibo-box text-left bg-white border-2 border-dashed border-amber-600 p-8 rounded-xl shadow-sm">
-                                            <div className="text-center mb-8">
-                                                <h1 className="font-black text-2xl uppercase text-black mb-2">Recibo de Pagamento</h1>
-                                                <p className="text-xs font-bold uppercase tracking-widest text-amber-600">Gestão Master Imobiliária</p>
+
+                                            {modalType === 'contract' && (
+                                                <div className="text-left space-y-5">
+                                                    <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Vincular Imóvel</label><select required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={contractForm.propertyId} onChange={e => setContractForm({...contractForm, propertyId: e.target.value})}><option value="">Selecione...</option>{properties.map(p=><option key={p.id} value={p.id}>{p.nickname}</option>)}</select></div>
+                                                    <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Vincular Locatário</label><select required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={contractForm.tenantId} onChange={e => setContractForm({...contractForm, tenantId: e.target.value})}><option value="">Selecione...</option>{tenants.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+                                                    
+                                                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                                                        <p className="text-[10px] font-black text-amber-600 uppercase mb-3">Laudos de Vistoria (Proteção de Patrimônio)</p>
+                                                        <div className="space-y-3">
+                                                            <div className="p-2 border-2 border-dashed border-amber-200 rounded-lg relative hover:bg-white transition-colors">
+                                                                <p className="text-[9px] font-bold text-amber-500 text-center uppercase">{contractForm.inspection_entry_name || "Anexar Laudo de Entrada (PDF/Fotos)"}</p>
+                                                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files[0]; const r = new FileReader(); r.onloadend = () => setContractForm({...contractForm, inspection_entry_name: f.name, inspection_entry_data: r.result}); if(f) r.readAsDataURL(f); }} />
+                                                            </div>
+                                                            <div className="p-2 border-2 border-dashed border-slate-200 rounded-lg relative hover:bg-white transition-colors">
+                                                                <p className="text-[9px] font-bold text-slate-400 text-center uppercase">{contractForm.inspection_exit_name || "Anexar Laudo de Saída (Finalização)"}</p>
+                                                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const f = e.target.files[0]; const r = new FileReader(); r.onloadend = () => setContractForm({...contractForm, inspection_exit_name: f.name, inspection_exit_data: r.result}); if(f) r.readAsDataURL(f); }} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                                        <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Valor do Aluguel (R$)</label><input type="number" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={contractForm.rent_value} onChange={e => setContractForm({...contractForm, rent_value: e.target.value})} /></div>
+                                                        <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Data Fim Contrato (Alarme)</label><input type="date" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={contractForm.end_date} onChange={e => setContractForm({...contractForm, end_date: e.target.value})} /></div>
+                                                    </div>
+                                                    <div className="p-4 border-2 border-dashed border-slate-200 rounded-xl text-center relative hover:bg-slate-50 transition-colors text-left"><Icon name="cloud-arrow-up" size={24} className="mx-auto mb-1 text-[#002147]"/><p className="text-[10px] font-black uppercase text-slate-400 text-center">{contractForm.fileName || "Anexar Contrato PDF (Auditoria Master)"}</p><input type="file" accept="application/pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { const file = e.target.files[0]; const r = new FileReader(); r.onloadend = () => setContractForm({...contractForm, fileName: file.name, fileData: r.result}); if(file) r.readAsDataURL(file); }} /></div>
+                                                </div>
+                                            )}
+
+                                            {modalType === 'finance' && (
+                                                <div className="text-left space-y-5">
+                                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                                        <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Modalidade</label><select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={financeForm.type} onChange={e => setFinanceForm({...financeForm, type: e.target.value})}><option value="Receita">Receita (+)</option><option value="Despesa">Despesa (-)</option></select></div>
+                                                        <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Data</label><input type="date" className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} /></div>
+                                                    </div>
+                                                    <div className="text-left"><input required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" placeholder="Descrição da Transação Master" value={financeForm.description} onChange={e => setFinanceForm({...financeForm, description: e.target.value})} /></div>
+                                                    <div className="text-left"><input type="number" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left" placeholder="Valor Transacionado (R$)" value={financeForm.value} onChange={e => setFinanceForm({...financeForm, value: e.target.value})} /></div>
+                                                </div>
+                                            )}
+
+                                            <div className="pt-5 flex justify-end gap-3 border-t border-slate-100 shrink-0 text-left">
+                                                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-3 text-slate-400 font-bold uppercase text-[10px] hover:bg-slate-50 rounded-xl transition-all">Cancelar</button>
+                                                <button type="submit" className="px-8 py-3 bg-[#002147] text-amber-500 font-black rounded-xl shadow-xl transition-all text-[10px] uppercase tracking-widest hover:bg-amber-600 hover:text-white flex items-center gap-2"><Icon name="check" weight="bold"/> SALVAR MASTER</button>
                                             </div>
-                                            <div className="text-base space-y-6 text-slate-700">
-                                                <p>Recebemos a quantia de <strong className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">{formatCurrency(editingItem.value)}</strong></p>
-                                                <p><strong>Referente a:</strong> <span className="uppercase font-bold">{editingItem.description}</span></p>
-                                                <div className="flex justify-between items-center mt-12 pt-8 border-t-2 border-slate-100">
-                                                    <div>
-                                                        <p className="font-bold text-slate-500 text-xs uppercase tracking-wider">Data de Emissão</p>
-                                                        <p className="font-bold text-lg text-black">{new Date().toLocaleDateString()}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="w-48 h-px bg-amber-500 mb-2"></div>
-                                                        <p className="font-bold text-[10px] uppercase text-amber-600 tracking-widest">Assinatura do Responsável</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-8 flex justify-center no-print">
-                                            <button type="button" onClick={() => handlePrintReceipt(editingItem)} className="px-8 py-3 bg-black text-amber-500 font-black rounded-xl hover:bg-amber-600 hover:text-white uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2 transform hover:-translate-y-1 transition-all">
-                                                <Icon name="printer" weight="bold" size={20} /> Imprimir Recibo Agora
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : modalType.startsWith('report_') ? (
-                                    <div className="p-8 text-center">
-                                        <div className="mb-6">
-                                            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-600 mb-4">
-                                                <Icon name="file-doc" size={40} weight="duotone"/>
-                                            </div>
-                                            <h2 className="text-xl font-black text-slate-800">Pronto para Exportação</h2>
-                                            <p className="text-slate-500 font-bold mt-2 text-sm">O relatório completo será gerado em formato compatível com Word (.doc).</p>
-                                        </div>
-                                        <button onClick={() => generateReportDOC(modalType)} className="w-full py-3 bg-black hover:bg-slate-900 text-amber-500 font-black rounded-xl shadow-xl flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1 text-xs"><Icon name="download-simple" weight="bold" size={20}/> BAIXAR RELATÓRIO (DOC)</button>
-                                    </div>
-                                ) : (
-                                    <form onSubmit={saveItem} className="p-6 space-y-5 text-left font-semibold text-slate-700 overflow-y-auto text-sm">
-                                        {modalType === 'property' && (
-                                            <>
-                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Apelido do Imóvel</label><input required className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-amber-600 font-bold text-sm" value={propertyForm.nickname} onChange={e => setPropertyForm({...propertyForm, nickname: e.target.value})} /></div>
-                                                <div className="flex gap-4 text-left">
-                                                    <div className="flex-1">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest text-left">Classificação Master</label>
-                                                        <select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" value={propertyForm.legal_status} onChange={e => setPropertyForm({...propertyForm, legal_status: e.target.value})}>
-                                                            <option>Regular</option><option>Espólio</option><option>Inventário em Trâmite</option><option>Nome de Parente</option><option>Usucapião</option><option>Contrato de Gaveta</option><option>Financiado</option><option>Judicial</option><option>Penhora</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest text-left">Status de Ocupação</label>
-                                                        <select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" value={propertyForm.status} onChange={e => setPropertyForm({...propertyForm, status: e.target.value})}>
-                                                            <option value="Vago">Vago</option>
-                                                            <option value="Alugado">Alugado</option>
-                                                            <option value="Reforma">Em Reforma</option>
-                                                            <option value="Indisponivel">Indisponível</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div className="bg-amber-50/50 p-5 rounded-2xl border border-amber-100/50 text-left">
-                                                    <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-3">Certificação de Documentos</h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 text-left">
-                                                        <label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-4 h-4 accent-black" checked={propertyForm.doc_registration} onChange={e=>setPropertyForm({...propertyForm, doc_registration:e.target.checked})} /><span className="text-[10px] uppercase">Matrícula</span></label>
-                                                        <label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-4 h-4 accent-black" checked={propertyForm.doc_deed} onChange={e=>setPropertyForm({...propertyForm, doc_deed:e.target.checked})} /><span className="text-[10px] uppercase">Escritura</span></label>
-                                                        <label className="flex items-center gap-2 cursor-pointer text-left"><input type="checkbox" className="w-4 h-4 accent-black" checked={propertyForm.doc_iptu} onChange={e=>setPropertyForm({...propertyForm, doc_iptu:e.target.checked})} /><span className="text-[10px] uppercase">IPTU Pago</span></label>
-                                                    </div>
-                                                    <textarea className="w-full p-3 border border-white rounded-xl focus:border-amber-600 transition-all font-bold h-20 text-xs italic" value={propertyForm.legal_notes} onChange={e => setPropertyForm({...propertyForm, legal_notes: e.target.value})} placeholder="Registe aqui as notas jurídicas master..."></textarea>
-                                                </div>
-                                                <input type="number" className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" value={propertyForm.base_rent} onChange={e => setPropertyForm({...propertyForm, base_rent: e.target.value})} placeholder="Valor do Aluguel (R$)" />
-                                            </>
-                                        )}
-
-                                        {modalType === 'tenant' && (
-                                            <>
-                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Nome Completo</label><input required className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-amber-600 font-bold text-sm" placeholder="Nome do Inquilino" value={tenantForm.name} onChange={e => setTenantForm({...tenantForm, name: e.target.value})} /></div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Imóvel Locado (Opcional)</label>
-                                                    <select className="w-full p-3 border border-slate-200 rounded-xl font-bold outline-none focus:border-amber-600 text-sm" value={tenantForm.propertyId || ''} onChange={e => setTenantForm({...tenantForm, propertyId: e.target.value})}>
-                                                        <option value="">Nenhum / Aguardando Contrato</option>
-                                                        {properties.map(p => (
-                                                            <option key={p.id} value={p.id}>{p.nickname} ({p.status})</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">CPF / NIF</label><input required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" placeholder="000.000.000-00" value={tenantForm.cpf} onChange={e => setTenantForm({...tenantForm, cpf: maskCPF(e.target.value)})} /></div>
-                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Telefone</label><input required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" placeholder="(00) 00000-0000" value={tenantForm.phone} onChange={e => setTenantForm({...tenantForm, phone: maskPhone(e.target.value)})} /></div>
-                                                </div>
-                                                <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Email</label><input type="email" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" placeholder="email@exemplo.com" value={tenantForm.email} onChange={e => setTenantForm({...tenantForm, email: e.target.value})} /></div>
-                                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                                    <input type="checkbox" className="w-5 h-5 accent-black" checked={tenantForm.documents_checked} onChange={e => setTenantForm({...tenantForm, documents_checked: e.target.checked})} />
-                                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Documentação Verificada?</span>
-                                                </div>
-                                            </>
-                                        )}
-
-                                        {modalType === 'contract' && (
-                                            <>
-                                                <div className="flex gap-4 text-left">
-                                                    <div className="flex-1 text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Vincular Ativo (Obrigatório)</label><select required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" value={contractForm.propertyId} onChange={e => setContractForm({...contractForm, propertyId: e.target.value})}><option value="">Selecione o Imóvel...</option>{properties.map(p=><option key={p.id} value={p.id}>{p.nickname} ({p.status})</option>)}</select></div>
-                                                    <div className="flex-1 text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Locatário</label><select required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" value={contractForm.tenantId} onChange={e => setContractForm({...contractForm, tenantId: e.target.value})}><option value="">Selecionar...</option>{tenants.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4 text-left text-left">
-                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Renda Mensal (R$)</label><input type="number" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" value={contractForm.rent_value} onChange={e => setContractForm({...contractForm, rent_value: e.target.value})} /></div>
-                                                    <div><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Dia Pagamento</label><input type="number" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" value={contractForm.payment_day} onChange={e => setContractForm({...contractForm, payment_day: e.target.value})} /></div>
-                                                </div>
-                                                <div className="p-8 border-2 border-dashed border-black/20 rounded-2xl bg-amber-50/30 text-center relative overflow-hidden group hover:bg-black transition-all cursor-pointer text-center">
-                                                    <Icon name="cloud-arrow-up" size={32} className="mx-auto mb-2 text-black group-hover:text-amber-500 transition-colors" />
-                                                    <p className="text-[10px] font-black uppercase text-black group-hover:text-amber-500 transition-colors tracking-widest">{contractForm.fileName || "Clique para Selecionar o Arquivo PDF"}</p>
-                                                    <input type="file" accept="application/pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
-                                                </div>
-                                                <div className="bg-amber-100 border border-amber-200 p-2.5 rounded-xl flex items-center gap-2 justify-center">
-                                                    <Icon name="warning-circle" className="text-amber-700" weight="bold" size={16}/>
-                                                    <p className="text-[10px] text-amber-800 font-bold uppercase">Atenção: O sistema aceita apenas arquivos no formato PDF.</p>
-                                                </div>
-                                                <p className="text-[10px] text-center text-slate-400 font-bold">Máximo 800KB para modo demonstração</p>
-                                            </>
-                                        )}
-
-                                        {modalType === 'finance' && (
-                                            <>
-                                                <div className="grid grid-cols-2 gap-4 text-left">
-                                                    <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Modalidade</label><select className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left text-sm" value={financeForm.type} onChange={e => setFinanceForm({...financeForm, type: e.target.value})}><option value="Receita">Receita (+)</option><option value="Despesa">Despesa (-)</option></select></div>
-                                                    <div className="text-left"><label className="text-[10px] font-black text-slate-400 uppercase block mb-1 text-left">Data Liquidação</label><input type="date" className="w-full p-3 border border-slate-200 rounded-xl font-bold text-left text-sm" value={financeForm.date} onChange={e => setFinanceForm({...financeForm, date: e.target.value})} /></div>
-                                                </div>
-                                                <input required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" placeholder="Descrição Master" value={financeForm.description} onChange={e => setFinanceForm({...financeForm, description: e.target.value})} />
-                                                <input type="number" required className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm" placeholder="Valor Transacionado" value={financeForm.value} onChange={e => setFinanceForm({...financeForm, value: e.target.value})} />
-                                            </>
-                                        )}
-
-                                        <div className="pt-5 flex justify-end gap-3 border-t border-slate-100 text-left">
-                                            <button type="button" onClick={closeModal} className="px-5 py-3 text-slate-400 font-bold hover:bg-slate-50 rounded-xl text-[10px] uppercase tracking-widest transition-all">Cancelar</button>
-                                            <button type="submit" className="px-8 py-3 bg-black text-amber-500 font-black rounded-xl shadow-xl flex items-center gap-2 transform hover:-translate-y-1 transition-all text-[10px] uppercase tracking-widest border border-amber-600/30"><Icon name="check" weight="bold" size={16}/> Confirmar Registo</button>
-                                        </div>
-                                    </form>
-                                )}
+                                        </form>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
