@@ -247,7 +247,7 @@
             const [propertyForm, setPropertyForm] = useState({ 
                 nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', 
                 description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', 
-                legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false 
+                legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false, vacatedAt: null
             });
             const [tenantForm, setTenantForm] = useState({ name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false, propertyId: '' });
             const [contractForm, setContractForm] = useState({ propertyId: '', tenantId: '', start_date: '', end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '', fileData: '' });
@@ -533,7 +533,7 @@
                     }
                 }
 
-                if (type === 'property') setPropertyForm(item || { nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false });
+                if (type === 'property') setPropertyForm(item || { nickname: '', address: '', type: 'Casa', iptu_id: '', energy_code: '', water_code: '', description: '', status: 'Vago', base_rent: '', legal_status: 'Regular', legal_notes: '', doc_registration: false, doc_deed: false, doc_iptu: false, vacatedAt: null });
                 else if (type === 'tenant') setTenantForm(item || { name: '', cpf: '', email: '', phone: '', status: 'Ativo', documents_checked: false, propertyId: '' });
                 else if (type === 'contract') setContractForm(item || { propertyId: '', tenantId: '', start_date: today, end_date: '', rent_value: '', deposit_value: '', payment_day: '5', status: 'Ativo', index_adjustment: 'IPCA', fileName: '', fileData: '' });
                 else if (type === 'finance') setFinanceForm(item || { type: 'Receita', category: 'Aluguer', description: '', value: '', date: today, status: 'Pendente', propertyId: '' });
@@ -662,7 +662,15 @@
                 const isEdit = !!editingItem;
 
                 if (modalType === 'property') {
-                    const newItem = { ...propertyForm, id, base_rent: parseFloat(propertyForm.base_rent) };
+                    // Lógica de Alarme: Se o status mudar para 'Vago', registamos o timestamp
+                    let vacatedAt = propertyForm.vacatedAt;
+                    if (propertyForm.status === 'Vago' && (!editingItem || editingItem.status !== 'Vago')) {
+                        vacatedAt = new Date().toISOString();
+                    } else if (propertyForm.status !== 'Vago') {
+                        vacatedAt = null;
+                    }
+
+                    const newItem = { ...propertyForm, id, vacatedAt, base_rent: parseFloat(propertyForm.base_rent) };
                     saveToCloud('properties', newItem, setProperties, properties, isEdit);
                 } else if (modalType === 'tenant') {
                     const newItem = { ...tenantForm, id };
@@ -674,7 +682,7 @@
                     if (newItem.status === 'Ativo' && newItem.propertyId) {
                         const propToUpdate = properties.find(p => p.id === newItem.propertyId);
                         if (propToUpdate && propToUpdate.status !== 'Alugado') {
-                            const updatedProp = { ...propToUpdate, status: 'Alugado' };
+                            const updatedProp = { ...propToUpdate, status: 'Alugado', vacatedAt: null };
                             db.collection('properties').doc(String(updatedProp.id)).set(updatedProp)
                                 .then(() => {
                                     setProperties(prevProps => prevProps.map(p => p.id === updatedProp.id ? updatedProp : p));
@@ -753,7 +761,14 @@
                 const activeValue = contracts.filter(c => c.status === 'Ativo').reduce((a,b) => a + (b.rent_value || 0), 0);
                 const riskLegal = properties.filter(p => ['Judicial', 'Penhora', 'Dívida Ativa'].includes(p.legal_status)).length;
                 const pendingDocs = properties.filter(p => !p.doc_registration || !p.doc_deed || !p.doc_iptu).length;
-                return { totalIncome, totalExpense, balance: totalIncome - totalExpense, occupied, activeValue, riskLegal, pendingDocs, totalProperties: properties.length };
+                
+                // Lógica de Alerta de Vacatura (Novo)
+                const vacantAlerts = properties.filter(p => p.status === 'Vago').map(p => {
+                    const days = p.vacatedAt ? Math.floor((new Date() - new Date(p.vacatedAt)) / (1000 * 60 * 60 * 24)) : 0;
+                    return { ...p, daysVacant: days };
+                });
+
+                return { totalIncome, totalExpense, balance: totalIncome - totalExpense, occupied, activeValue, riskLegal, pendingDocs, totalProperties: properties.length, vacantAlerts };
             }, [financial, properties, contracts]);
 
             if (appState === 'login') return <LoginScreen onLogin={handleLogin} />;
@@ -911,7 +926,21 @@
                                         <Card className="p-6 card-hover overflow-y-auto max-h-[500px] text-left">
                                             <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-3 uppercase tracking-tighter text-left"><div className="p-1.5 bg-blue-100 text-blue-900 rounded-lg"><Icon name="bell-ringing" weight="fill"/></div> Alertas do Sistema</h3>
                                             
-                                            {/* Alerta Jurídico Clicável */}
+                                            {/* ALARME DE VACATURA (NOVO) */}
+                                            {stats.vacantAlerts.map(p => (
+                                                <div key={`alert-vac-${p.id}`} onClick={() => setActiveTab('properties')} className={`mb-3 p-3 border rounded-xl flex items-center justify-between cursor-pointer hover:opacity-80 transition-all border-l-4 group ${p.daysVacant > 30 ? 'bg-red-50 border-red-100 border-l-red-600' : 'bg-orange-50 border-orange-100 border-l-orange-400'}`}>
+                                                    <div className="text-left">
+                                                        <p className={`text-xs font-extrabold ${p.daysVacant > 30 ? 'text-red-800' : 'text-orange-800'}`}>
+                                                            {p.daysVacant > 30 ? '⚠ VACATURA CRÍTICA (>1 Mês)' : 'Ativo Desocupado'}
+                                                        </p>
+                                                        <p className="text-slate-800 font-bold text-xs">{p.nickname}</p>
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Vago há {p.daysVacant} dias</p>
+                                                    </div>
+                                                    <Icon name={p.daysVacant > 30 ? "warning-diamond" : "house-line"} className={p.daysVacant > 30 ? "text-red-600" : "text-orange-500"} size={20} weight="fill"/>
+                                                </div>
+                                            ))}
+
+                                            {/* Alerta Jurídico */}
                                             {properties.filter(p => ['Judicial', 'Penhora', 'Dívida Ativa'].includes(p.legal_status)).map(p => (
                                                 <div key={`alert-leg-${p.id}`} onClick={() => setActiveTab('situation')} className="mb-3 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-red-100 transition-all border-l-4 border-l-red-500 group">
                                                     <div className="text-left">
@@ -922,7 +951,7 @@
                                                 </div>
                                             ))}
 
-                                            {/* Alerta Financeiro Clicável */}
+                                            {/* Alerta Financeiro */}
                                             {financial.filter(f => f.status === 'Pendente').map(f => (
                                                 <div key={`alert-fin-${f.id}`} onClick={() => setActiveTab('finance')} className="mb-3 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-blue-100 transition-all border-l-4 border-l-blue-400 group">
                                                     <div className="text-left">
@@ -974,7 +1003,7 @@
                                                                 <div className="flex justify-between items-start text-left mb-3">
                                                                     <h4 className="font-black text-lg text-slate-800 mb-0.5">{p.nickname}</h4>
                                                                 </div>
-                                                                <p className="text-xs font-bold text-slate-400 mb-4">{p.address}</p>
+                                                                <p className="text-xs font-bold text-slate-500 mb-4">{p.address}</p>
                                                                 <div className="space-y-2 mb-4 bg-slate-50 p-3 rounded-xl border text-[10px] font-black uppercase tracking-widest text-left">
                                                                     <div className="flex justify-between text-left"><span>Matrícula</span>{p.doc_registration ? <Icon name="check-circle" className="text-emerald-500" weight="fill" size={14}/> : <Icon name="x-circle" className="text-red-400" weight="fill" size={14}/>}</div>
                                                                     <div className="flex justify-between text-left"><span>Escritura</span>{p.doc_deed ? <Icon name="check-circle" className="text-emerald-500" weight="fill" size={14}/> : <Icon name="x-circle" className="text-red-400" weight="fill" size={14}/>}</div>
